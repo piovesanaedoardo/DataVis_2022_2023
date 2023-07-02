@@ -20,7 +20,7 @@ st.title("World Cup Data Visualization")
 
 # ---------------------- SIDEBAR ----------------------
 st.sidebar.subheader('Datasets')
-st.header('World Cup Dataset')
+st.header('World Cup Datasets')
 
 if st.sidebar.checkbox('🏆 World Cups Dataset'):
     st.subheader('World Cups')
