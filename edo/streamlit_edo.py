@@ -18,7 +18,6 @@ df_matches = pd.read_csv("WorldCupMatches.csv")
 df_players = pd.read_csv("WorldCupPlayers.csv")
 df_world_cups = pd.read_csv("WorldCups.csv")
 
-
 # run the app
 # cd C:\Users\Edoardo\Documents\GitHub\DataVis_2022_2023
 # streamlit run streamlit_edo.py

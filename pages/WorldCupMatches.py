@@ -10,5 +10,6 @@ df_matches = pd.read_csv("WorldCupMatches.csv")
 df_players = pd.read_csv("WorldCupPlayers.csv")
 df_world_cups = pd.read_csv("WorldCups.csv")
 
-st.title("World Cup Data Visualization")
-st.header("World Cups Players")
+def run():
+    st.title("World Cup Data Visualization")
+    st.header("World Cups Matches")
