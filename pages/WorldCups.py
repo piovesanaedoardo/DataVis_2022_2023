@@ -181,3 +181,5 @@ def run():
 
     st.plotly_chart(fig)
     st.write("The host country has won the World Cup", len(df_host_wins), "times out of", len(df_world_cups), "tournaments.")
+
+    
