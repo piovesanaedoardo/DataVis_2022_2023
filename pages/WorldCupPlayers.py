@@ -138,7 +138,7 @@ def run():
     )
 
     # Show the interactive plot
-    fig.show()
+    st.write(fig)
 
     #Scatterplot of goals vs cards
     # Group the data by team initials and calculate the sum of goals, red cards, and yellow cards
@@ -210,7 +210,7 @@ def run():
     )
 
     # Show the interactive plot
-    fig.show()
+    st.write(fig)
 
 
     
@@ -234,7 +234,7 @@ def run():
                     hovertemplate='Player: %{customdata[0]}<br>Goals: %{y}')
 
     # Show the interactive plot
-    fig.show()
+    st.write(fig)
 
 
     #bubbleplot cards vs goals
@@ -250,4 +250,4 @@ def run():
     fig.update_yaxes(title='Red Cards')
 
     # Show the interactive plot
-    fig.show()
+    st.write(fig)
