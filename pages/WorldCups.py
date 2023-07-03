@@ -10,9 +10,11 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import folium
 from branca.colormap import linear
+import os
 # interactive histogram
 import plotly.express as px
 import plotly.graph_objects as go
+
 
 def run():
     # import datasets
@@ -182,4 +184,53 @@ def run():
     st.plotly_chart(fig)
     st.write("The host country has won the World Cup", len(df_host_wins), "times out of", len(df_world_cups), "tournaments.")
 
+    # ---------------------- QUALIFIED TEAMS ----------------------
+    st.subheader("Qualified Teams")
+    # Gruop by year and country to get the count of qualified teams
+    # Create the treemap
+    fig = go.Figure(go.Treemap(
+        # labels=df_world_cups['Year'],
+        # parents=[""] * len(df_world_cups),
+        # values=df_world_cups['QualifiedTeams'],
+        labels=df_world_cups['Year'],
+        parents=[""] * len(df_world_cups),
+        values=df_world_cups['QualifiedTeams'],
+        branchvalues="total"
+    ))
+
+    # Customize the treemap layout
+    fig.update_layout(
+        title='Distribution of Qualified Teams by Year',
+        width=600,
+        height=600
+    )
+
+    st.plotly_chart(fig)
     
+    # ---------------------- AVERAGE ATTENDANCE PER MATCH ----------------------
+    df_world_cups['Attendance'] = df_world_cups['Attendance'].str.replace('.', '')
+    df_world_cups['Attendance'] = pd.to_numeric(df_world_cups['Attendance'])
+    df_world_cups['MatchesPlayed'] = pd.to_numeric(df_world_cups['MatchesPlayed'])
+    df_world_cups['AvgAttendance'] = df_world_cups['Attendance'] / df_world_cups['MatchesPlayed']
+    fig = px.line(df_world_cups, x='Year', y='AvgAttendance', title='Average Attendance per Match in Each World Cup')
+    st.plotly_chart(fig)
+
+    # ---------------------- TOP 4 TEAMS ----------------------
+    top_4 = ['Winner', 'Runners-Up', 'Third', 'Fourth']
+    # merge "Germany FR" and "Germany" into "Germany"
+    df_world_cups['Winner'] = df_world_cups['Winner'].replace('Germany FR', 'Germany')
+    df_world_cups['Runners-Up'] = df_world_cups['Runners-Up'].replace('Germany FR', 'Germany')
+    df_world_cups['Third'] = df_world_cups['Third'].replace('Germany FR', 'Germany')
+    df_world_cups['Fourth'] = df_world_cups['Fourth'].replace('Germany FR', 'Germany')
+    df_top_4 = df_world_cups.melt(id_vars='Year', value_vars=top_4, var_name='Position', value_name='Team')
+    df_top_4_count = df_top_4.groupby('Team').count()[['Position']].reset_index().rename(columns={'Position': 'Count'})
+
+    fig = px.bar(df_top_4_count, x='Team', y='Count', title='Number of Times Each Team Finished in Top 4')
+
+    fig.update_layout(
+        xaxis=dict(
+            tickangle=-45
+        )
+    )
+
+    st.plotly_chart(fig)

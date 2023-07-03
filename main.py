@@ -17,3 +17,7 @@ page.run()
 
 if "shared" not in st.session_state:
    st.session_state["shared"] = True
+
+# to run streamlit app:
+# cd C:\Users\Edoardo\Documents\GitHub\DataVis_2022_2023
+# streamlit run main.py
