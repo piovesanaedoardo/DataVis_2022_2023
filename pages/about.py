@@ -1,15 +1,6 @@
 # libraries
 import streamlit as st
-
 def run():
-    # Your Streamlit code for the World Cups page
-    
-    # Example code
-    st.title("World Cups Page")
-    st.write("This is the World Cups page content.")
-
-    # Rest of your code
-
     st.title("World Cup Data Visualization")
 
     st.header('Brief Description')
@@ -21,3 +12,4 @@ def run():
     Secondly, the World Cup captures the attention of millions of fans worldwide, making it an exciting and relatable subject for data visualization. 
     The data is taken from [Kaggle](https://www.kaggle.com/abecklas/fifa-world-cup).
     ''')
+
