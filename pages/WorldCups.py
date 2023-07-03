@@ -94,7 +94,7 @@ def run():
     st.subheader("History Trend")
     # ------------- GOALS SCORED PER YEAR -------------
     # histogram of goals scored per year
-    fig = px.bar(x=df_world_cups["Year"], y=df_world_cups["GoalsScored"], 
+    fig = px.bar(x=df_world_cups["Year"], y=df_world_cups["GoalsScored"],
                 title="Goals Scored per Year",
                 labels={'x': 'Year', 'y': 'Number of Goals'}, 
                 height=400)
@@ -225,7 +225,9 @@ def run():
     df_top_4 = df_world_cups.melt(id_vars='Year', value_vars=top_4, var_name='Position', value_name='Team')
     df_top_4_count = df_top_4.groupby('Team').count()[['Position']].reset_index().rename(columns={'Position': 'Count'})
 
-    fig = px.bar(df_top_4_count, x='Team', y='Count', title='Number of Times Each Team Finished in Top 4')
+    fig = px.bar(df_top_4_count, x='Team', y='Count', 
+                 color='Team', 
+                 title='Number of Times Each Team Finished in Top 4')
 
     fig.update_layout(
         xaxis=dict(
