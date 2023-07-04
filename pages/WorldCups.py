@@ -32,7 +32,7 @@ def run():
 
     print(df_world_cups)
 
-    # ---------------------- WORLD MAP ----------------------
+    # ---------------------- 1_WORLD MAP ----------------------
     st.subheader("World Map")
     # Load the dataset
     df_worldmap_cup = pd.DataFrame({
@@ -95,27 +95,89 @@ def run():
     # Display the map in Streamlit
     st.components.v1.html(world_map._repr_html_(), height=500)
 
-    # ---------------------- HISTORY TREND ----------------------
+    # ---------------------- 2_NUMBER OF TIMES IN THE TOP 4 TEAMS ----------------------
+    top_4 = ['Winner', 'Runners-Up', 'Third', 'Fourth']
+    # merge "Germany FR" and "Germany" into "Germany"
+    df_world_cups['Winner'] = df_world_cups['Winner'].replace('Germany FR', 'Germany')
+    df_world_cups['Runners-Up'] = df_world_cups['Runners-Up'].replace('Germany FR', 'Germany')
+    df_world_cups['Third'] = df_world_cups['Third'].replace('Germany FR', 'Germany')
+    df_world_cups['Fourth'] = df_world_cups['Fourth'].replace('Germany FR', 'Germany')
+    df_top_4 = df_world_cups.melt(id_vars='Year', value_vars=top_4, var_name='Position', value_name='Team')
+    df_top_4_count = df_top_4.groupby('Team').count()[['Position']].reset_index().rename(columns={'Position': 'Count'})
+
+    fig = px.bar(df_top_4_count, x='Team', y='Count', 
+                 color='Team', 
+                 title='Number of Times Each Team Finished in Top 4')
+
+    fig.update_layout(
+        xaxis=dict(
+            tickangle=-45
+        )
+    )
+
+    st.plotly_chart(fig)
+
+    # ---------------------- 3_QUALIFIED TEAMS ----------------------
+    st.subheader("Qualified Teams by Year")
+    # Group by year and country to get the count of qualified teams
+    values = df_world_cups.groupby('Year')['QualifiedTeams'].sum().values
+
+    # Define the custom colors
+    custom_colors = ['#FFA15A', '#19D3F3', '#FF6692', '#B6E880', '#FF97FF']
+
+    # Create a color dictionary to assign colors based on values
+    color_dict = {}
+    color_index = 0
+
+    for value in values:
+        if value not in color_dict:
+            color_dict[value] = custom_colors[color_index]
+            color_index = (color_index + 1) % len(custom_colors)
+
+    # Create the treemap
+    fig = go.Figure(go.Treemap(
+        labels=df_world_cups['Year'],
+        parents=[""] * len(df_world_cups),
+        values=values,
+        branchvalues="total",
+        marker=dict(
+            colors=[color_dict[value] for value in values],
+            showscale=False,
+        ),
+        textfont=dict(
+            size=20,
+        )
+    ))
+
+    # Customize the treemap layout
+    fig.update_layout(
+        title='Distribution of Qualified Teams by Year',
+        width=600,
+        height=600
+    )
+
+    st.plotly_chart(fig)
+
+    # ---------------------- 4_HISTORY TREND ----------------------
     st.subheader("History Trend")
     # ------------- GOALS SCORED PER YEAR -------------
-    # histogram of goals scored per year
-    fig = px.bar(
-        x=df_world_cups["Year"], 
-        y=df_world_cups["GoalsScored"],
-        color=df_world_cups["GoalsScored"],
+    fig = px.bar(df_world_cups,
+        x="Year", 
+        y="GoalsScored",
+        color="Year",
         title="Goals Scored per Year",
         labels={'x': 'Year', 'y': 'Number of Goals'}, 
-        height=400
     )
     # Set x-ticks every 4 years from 1930 to 2014
     fig.update_layout(
         xaxis=dict(
             tickmode='array',
             tickvals=np.arange(1930, 2015, 4),
-            ticktext=np.arange(1930, 2015, 4)
-        ),
-        coloraxis=dict(colorscale='Viridis')
+            ticktext=np.arange(1930, 2015, 4),
+            tickangle=-45
+        )
     )
+
     st.plotly_chart(fig)
 
     # ------------- MATCHES PLAYED PER YEAR -------------
@@ -160,7 +222,15 @@ def run():
     )
     st.plotly_chart(fig)
 
-    # ---------------------- HOSTING COUNTRIES ----------------------
+    # ---------------------- AVERAGE ATTENDANCE PER MATCH ----------------------
+    df_world_cups['Attendance'] = df_world_cups['Attendance'].str.replace('.', '')
+    df_world_cups['Attendance'] = pd.to_numeric(df_world_cups['Attendance'])
+    df_world_cups['MatchesPlayed'] = pd.to_numeric(df_world_cups['MatchesPlayed'])
+    df_world_cups['AvgAttendance'] = df_world_cups['Attendance'] / df_world_cups['MatchesPlayed']
+    fig = px.line(df_world_cups, x='Year', y='AvgAttendance', title='Average Attendance per Match in Each World Cup')
+    st.plotly_chart(fig)
+
+    # ---------------------- 5_HOSTING COUNTRIES ----------------------
     st.subheader("Hosting the World Cup")
 
     # ---------------------- PIE CHART ----------------------
@@ -204,8 +274,7 @@ def run():
         fig.update_layout(title_text='Hosting Continents by Continent')
         st.plotly_chart(fig)
 
-
-    # ---------------------- BAR CHART ----------------------
+    # BAR CHART
     # does the host country have an advantage?
     df_host_wins = df_world_cups[df_world_cups['Country'] == df_world_cups['Winner']]
     st.subheader("Does the host country have an advantage?")
@@ -234,69 +303,7 @@ def run():
     st.plotly_chart(fig)
     st.write("The host country has won the World Cup", len(df_host_wins), "times out of", len(df_world_cups), "tournaments.")
 
-    # ---------------------- QUALIFIED TEAMS ----------------------
-    st.subheader("Qualified Teams by Year")
-    # Group by year and country to get the count of qualified teams
-    values = df_world_cups.groupby('Year')['QualifiedTeams'].sum().values
-
-    # Create the treemap
-    fig = go.Figure(go.Treemap(
-        labels=df_world_cups['Year'],
-        parents=[""] * len(df_world_cups),
-        values=values,
-        branchvalues="total",
-        marker=dict(
-            colors=values,
-            colorscale='Aggrnyl',
-            colorbar=dict(
-                title='Colorbar Title'
-            )
-        ),
-        textfont=dict(
-            size=20,
-        )
-    ))
-
-    # Customize the treemap layout
-    fig.update_layout(
-        title='Distribution of Qualified Teams by Year',
-        width=600,
-        height=600
-    )
-
-    st.plotly_chart(fig)
-    
-    # ---------------------- AVERAGE ATTENDANCE PER MATCH ----------------------
-    df_world_cups['Attendance'] = df_world_cups['Attendance'].str.replace('.', '')
-    df_world_cups['Attendance'] = pd.to_numeric(df_world_cups['Attendance'])
-    df_world_cups['MatchesPlayed'] = pd.to_numeric(df_world_cups['MatchesPlayed'])
-    df_world_cups['AvgAttendance'] = df_world_cups['Attendance'] / df_world_cups['MatchesPlayed']
-    fig = px.line(df_world_cups, x='Year', y='AvgAttendance', title='Average Attendance per Match in Each World Cup')
-    st.plotly_chart(fig)
-
-    # ---------------------- TOP 4 TEAMS ----------------------
-    top_4 = ['Winner', 'Runners-Up', 'Third', 'Fourth']
-    # merge "Germany FR" and "Germany" into "Germany"
-    df_world_cups['Winner'] = df_world_cups['Winner'].replace('Germany FR', 'Germany')
-    df_world_cups['Runners-Up'] = df_world_cups['Runners-Up'].replace('Germany FR', 'Germany')
-    df_world_cups['Third'] = df_world_cups['Third'].replace('Germany FR', 'Germany')
-    df_world_cups['Fourth'] = df_world_cups['Fourth'].replace('Germany FR', 'Germany')
-    df_top_4 = df_world_cups.melt(id_vars='Year', value_vars=top_4, var_name='Position', value_name='Team')
-    df_top_4_count = df_top_4.groupby('Team').count()[['Position']].reset_index().rename(columns={'Position': 'Count'})
-
-    fig = px.bar(df_top_4_count, x='Team', y='Count', 
-                 color='Team', 
-                 title='Number of Times Each Team Finished in Top 4')
-
-    fig.update_layout(
-        xaxis=dict(
-            tickangle=-45
-        )
-    )
-
-    st.plotly_chart(fig)
-
-    # -------------------------- STADIUM --------------------------
+    # -------------------------- 5_STADIUM --------------------------
     
     # Calculate the mean attendance for each stadium and city
     stadium = df_matches[['Stadium', 'City', 'Attendance']].groupby(['Stadium', 'City']).mean().reset_index()
@@ -322,9 +329,7 @@ def run():
         y=top_10_stadiums['Stadium'],
         orientation='h',
         marker=dict(
-            color=top_10_stadiums['Attendance'],
-            colorscale='Viridis',
-            reversescale=True
+            color=['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52']
         ),
         text=top_10_stadiums['Attendance'],
         hovertext = top_10_stadiums['City'],
@@ -345,3 +350,5 @@ def run():
 
     # Display the plotly chart
     st.plotly_chart(fig)
+
+    
