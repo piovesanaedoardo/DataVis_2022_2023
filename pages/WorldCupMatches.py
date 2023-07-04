@@ -7,6 +7,8 @@ import seaborn as sns
 import base64
 
 def run():
+
+    # --- IMPORT DATASETS --- #
     # import datasets
     df_matches = pd.read_csv("WorldCupMatches.csv")
     df_players = pd.read_csv("WorldCupPlayers.csv")
@@ -15,12 +17,14 @@ def run():
     st.title("World Cup Data Visualization")
     st.header("World Cups Matches")
 
+    # --- MODIFY DATASETS --- #
     # Calculate the total goals scored by each team in each match
     df_matches['Home Team Goals'] = df_matches['Home Team Goals'].fillna(0).astype(int)
     df_matches['Away Team Goals'] = df_matches['Away Team Goals'].fillna(0).astype(int)
     df_matches['Total Home Goals'] = df_matches['Home Team Goals']
     df_matches['Total Away Goals'] = df_matches['Away Team Goals']
 
+    # --- CREATE GOALS DATASET --- #
     # Reshape the data to have one row per team per match
     df_home = df_matches[['Year', 'Home Team Name', 'Total Home Goals']].rename(columns={'Home Team Name': 'Team', 'Total Home Goals': 'Goals'})
     df_away = df_matches[['Year', 'Away Team Name', 'Total Away Goals']].rename(columns={'Away Team Name': 'Team', 'Total Away Goals': 'Goals'})
@@ -41,6 +45,9 @@ def run():
     # Melt the data to have one row per team per year
     df_goals = df_goals.melt(id_vars='Year', var_name='Team', value_name='Goals')
 
+    st.write(df_goals)
+    '''
+    # --- VS_1) CREATE A RACING CHART --- #
     # create a racing bar chart to visualize the total goals scored by each team in each year
 
     import matplotlib.pyplot as plt
@@ -126,3 +133,5 @@ def run():
     # - la partita con più pubblico della storia
     # - la squadra con più vittorie nella storia
     # - la squadra con più sconfitte nella storia
+    '''
+    st.write('sss')
