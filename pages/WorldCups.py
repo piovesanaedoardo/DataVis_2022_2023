@@ -94,50 +94,64 @@ def run():
     st.subheader("History Trend")
     # ------------- GOALS SCORED PER YEAR -------------
     # histogram of goals scored per year
-    fig = px.bar(x=df_world_cups["Year"], y=df_world_cups["GoalsScored"],
-                title="Goals Scored per Year",
-                labels={'x': 'Year', 'y': 'Number of Goals'}, 
-                height=400)
+    fig = px.bar(
+        x=df_world_cups["Year"], 
+        y=df_world_cups["GoalsScored"],
+        color=df_world_cups["GoalsScored"],
+        title="Goals Scored per Year",
+        labels={'x': 'Year', 'y': 'Number of Goals'}, 
+        height=400
+    )
     # Set x-ticks every 4 years from 1930 to 2014
     fig.update_layout(
         xaxis=dict(
             tickmode='array',
             tickvals=np.arange(1930, 2015, 4),
             ticktext=np.arange(1930, 2015, 4)
-        )
+        ),
+        coloraxis=dict(colorscale='Viridis')
     )
     st.plotly_chart(fig)
 
     # ------------- MATCHES PLAYED PER YEAR -------------
     # histogram of matches played per year
-    fig = px.bar(x=df_world_cups["Year"], y=df_world_cups["MatchesPlayed"],
-                    title="Matches Played per Year",
-                    labels={'x': 'Year', 'y': 'Number of Matches'},
-                    orientation='v',
-                    height=400)
+    fig = px.bar(
+        x=df_world_cups["Year"], 
+        y=df_world_cups["MatchesPlayed"],
+        color=df_world_cups["MatchesPlayed"],
+        title="Matches Played per Year",
+        labels={'x': 'Year', 'y': 'Number of Matches'},
+        orientation='v',
+        height=400
+    )
     # Set x-ticks every 4 years from 1930 to 2014
     fig.update_layout(
         xaxis=dict(
             tickmode='array',
             tickvals=np.arange(1930, 2015, 4),
             ticktext=np.arange(1930, 2015, 4)
-        )
+        ),
+        coloraxis=dict(colorscale='Viridis')
     )
     st.plotly_chart(fig)
 
     # ------------- GOALS SCORED BY MATCHES PLAYED IN EACH YEAR -------------
     # histogram of goals scored by matches played in each year
-    fig = px.bar(x=df_world_cups["Year"], y=df_world_cups["GoalsScored"]/df_world_cups["MatchesPlayed"],
-                    title="Goals Scored by Matches Played in each Year",
-                    labels={'x': 'Year', 'y': 'Goals per Match'},
-                    height=400)
+    fig = px.bar(
+        x=df_world_cups["Year"], 
+        y=df_world_cups["GoalsScored"]/df_world_cups["MatchesPlayed"],
+        color=df_world_cups["GoalsScored"]/df_world_cups["MatchesPlayed"],
+        title="Goals Scored by Matches Played in each Year",
+        labels={'x': 'Year', 'y': 'Goals per Match'},
+        height=400)
     # Set x-ticks every 4 years from 1930 to 2014
     fig.update_layout(
         xaxis=dict(
             tickmode='array',
             tickvals=np.arange(1930, 2015, 4),
             ticktext=np.arange(1930, 2015, 4)
-        )
+        ),
+        coloraxis=dict(colorscale='Viridis')
     )
     st.plotly_chart(fig)
 
@@ -185,17 +199,26 @@ def run():
     st.write("The host country has won the World Cup", len(df_host_wins), "times out of", len(df_world_cups), "tournaments.")
 
     # ---------------------- QUALIFIED TEAMS ----------------------
-    st.subheader("Qualified Teams")
-    # Gruop by year and country to get the count of qualified teams
+    st.subheader("Qualified Teams by Year")
+    # Group by year and country to get the count of qualified teams
+    values = df_world_cups.groupby('Year')['QualifiedTeams'].sum().values
+
     # Create the treemap
     fig = go.Figure(go.Treemap(
-        # labels=df_world_cups['Year'],
-        # parents=[""] * len(df_world_cups),
-        # values=df_world_cups['QualifiedTeams'],
         labels=df_world_cups['Year'],
         parents=[""] * len(df_world_cups),
-        values=df_world_cups['QualifiedTeams'],
-        branchvalues="total"
+        values=values,
+        branchvalues="total",
+        marker=dict(
+            colors=values,
+            colorscale='Aggrnyl',
+            colorbar=dict(
+                title='Colorbar Title'
+            )
+        ),
+        textfont=dict(
+            size=20,
+        )
     ))
 
     # Customize the treemap layout
