@@ -295,3 +295,53 @@ def run():
     )
 
     st.plotly_chart(fig)
+
+    # -------------------------- STADIUM --------------------------
+    
+    # Calculate the mean attendance for each stadium and city
+    stadium = df_matches[['Stadium', 'City', 'Attendance']].groupby(['Stadium', 'City']).mean().reset_index()
+
+    # replace 'Maracan� - Est�dio Jornalista M�rio Filho' with 'Maracanã - Estádio Jornalista Mário Filho'
+    stadium['Stadium'] = stadium['Stadium'].replace('Maracan� - Est�dio Jornalista M�rio Filho', 'Maracanã - Estádio Jornalista Mário Filho')
+
+    # Sort the stadiums by attendance in descending order
+    stadium = stadium.sort_values('Attendance', ascending=False).round(0)
+
+    # Display the stadium DataFrame
+    # st.write(stadium)
+
+    # Get the top 10 stadiums with the highest attendance
+    top_10_stadiums = stadium.head(10)
+
+    # Reverse the order of the DataFrame so that the bar chart is ordered from top to bottom
+    top_10_stadiums = top_10_stadiums.iloc[::-1]
+
+    # Plot the top 10 stadiums in a horizontal bar chart
+    fig = go.Figure(go.Bar(
+        x=top_10_stadiums['Attendance'],
+        y=top_10_stadiums['Stadium'],
+        orientation='h',
+        marker=dict(
+            color=top_10_stadiums['Attendance'],
+            colorscale='Viridis',
+            reversescale=True
+        ),
+        text=top_10_stadiums['Attendance'],
+        hovertext = top_10_stadiums['City'],
+        hovertemplate = 'Stadium: %{y} <br>City: %{hovertext} <br>Attendance: %{x} <extra></extra>'
+    ))
+
+    fig.update_layout(
+        title='Top 10 Stadiums with Highest Attendance',
+        xaxis=dict(
+            title='Attendance'
+        ),
+        yaxis=dict(
+            title='Stadium'
+        ),
+        width=800,
+        height=600
+    )
+
+    # Display the plotly chart
+    st.plotly_chart(fig)
