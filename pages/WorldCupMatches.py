@@ -121,3 +121,8 @@ def run():
 
     # ------- nuovo grafico con streamlit martin -------- #
     #codice ...
+    # @martin sarebbe interessante mostrare:
+    # - la partita con più goal della storia
+    # - la partita con più pubblico della storia
+    # - la squadra con più vittorie nella storia
+    # - la squadra con più sconfitte nella storia
