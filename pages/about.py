@@ -13,3 +13,6 @@ def run():
     The data is taken from [Kaggle](https://www.kaggle.com/abecklas/fifa-world-cup).
     ''')
 
+    # add image
+    st.image("World_Cup_Trophy.png", width=700)
+

@@ -58,6 +58,10 @@ def run():
     color_map = 'YlOrBr'
     # Create a folium map centered on the world
     world_map = folium.Map(tiles='cartodbpositron')
+
+    # Define color scheme
+    color_map = 'viridis'
+
     # Create a function to update the map based on the selected placement
     def update_map(selected_placement):
         # Filter the merged dataframe based on the selected placement
@@ -81,6 +85,7 @@ def run():
         choropleth.geojson.add_child(tooltip)
         # Add the choropleth layer to the map
         choropleth.add_to(world_map)
+
     # Get the available placement options
     placements = df_worldmap_cup['Placement'].unique()
     # Create a dropdown menu to select the placement
@@ -156,20 +161,51 @@ def run():
     st.plotly_chart(fig)
 
     # ---------------------- HOSTING COUNTRIES ----------------------
-    st.subheader("Hosting Countries")
+    st.subheader("Hosting the World Cup")
 
+    # ---------------------- PIE CHART ----------------------
     # Calculate the count of each hosting country
     country_counts = df_world_cups['Country'].value_counts()
 
-    # Create the pie chart
-    fig = go.Figure(data=go.Pie(labels=country_counts.index, values=country_counts))
+    # Define the mapping of countries to continents
+    country_to_continent = {
+        'Italy': 'Europe',
+        'France': 'Europe',
+        'Brazil': 'South America',
+        'Mexico': 'North America',
+        'Germany': 'Europe',
+        'Uruguay': 'South America',
+        'Switzerland': 'Europe',
+        'Sweden': 'Europe',
+        'Chile': 'South America',
+        'England': 'Europe',
+        'Argentina': 'South America',
+        'Spain': 'Europe',
+        'USA': 'North America',
+        'Korea/Japan': 'Asia',
+        'South Africa': 'Africa'
+    }
 
-    # Set the chart title
-    fig.update_layout(title_text='Hosting Countries for the World Cup')
+    # Calculate the count of each continent
+    continent_counts = df_world_cups['Country'].map(country_to_continent).value_counts()
 
-    # Display the chart
-    st.plotly_chart(fig)
+    # Create a selectbox to choose the plot: 
+    plot_choice = st.selectbox('Do you want to show countries or continents?', ['Countries', 'Continents'])
 
+    # Display the selected plot
+    if plot_choice == 'Countries':
+        # Create the pie chart for hosting countries
+        fig = go.Figure(data=go.Pie(labels=country_counts.index, values=country_counts))
+        fig.update_layout(title_text='Hosting Countries for the World Cup')
+        st.plotly_chart(fig)
+    else:
+        # Create the pie chart for continents
+        fig = go.Figure(data=go.Pie(labels=continent_counts.index, values=continent_counts))
+        fig.update_layout(title_text='Hosting Continents by Continent')
+        st.plotly_chart(fig)
+
+
+    # ---------------------- BAR CHART ----------------------
     # does the host country have an advantage?
     df_host_wins = df_world_cups[df_world_cups['Country'] == df_world_cups['Winner']]
     st.subheader("Does the host country have an advantage?")
