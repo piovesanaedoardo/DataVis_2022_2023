@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib as plt
 import seaborn as sns
+import base64
 
 def run():
     # import datasets
@@ -39,8 +40,6 @@ def run():
 
     # Melt the data to have one row per team per year
     df_goals = df_goals.melt(id_vars='Year', var_name='Team', value_name='Goals')
-
-    st.write(df_goals)
 
     # create a racing bar chart to visualize the total goals scored by each team in each year
 
@@ -107,8 +106,23 @@ def run():
     writer = PillowWriter(fps=60) 
     animator.save("animation.gif", writer=writer)
 
-    # Display animation in streamlit app 
-    st.image("animation.gif")
+    # Display the animation
+    """### gif from local file"""
+    file_ = open("animation.gif", "rb")
+    contents = file_.read()
+    data_url = base64.b64encode(contents).decode("utf-8")
+    file_.close()
+
+    st.markdown(
+        f'<img src="data:image/gif;base64,{data_url}" alt="cat gif" width="750" height="400" style="animation-duration: 5s;">',
+        unsafe_allow_html=True
+    )
 
 
-    
+    # ------- nuovo grafico con streamlit martin -------- #
+    #codice ...
+    # @martin sarebbe interessante mostrare:
+    # - la partita con più goal della storia
+    # - la partita con più pubblico della storia
+    # - la squadra con più vittorie nella storia
+    # - la squadra con più sconfitte nella storia
