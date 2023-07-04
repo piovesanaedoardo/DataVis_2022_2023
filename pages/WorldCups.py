@@ -164,7 +164,6 @@ def run():
     fig = px.bar(df_world_cups,
         x="Year", 
         y="GoalsScored",
-        color="Year",
         title="Goals Scored per Year",
         labels={'x': 'Year', 'y': 'Number of Goals'}, 
     )
@@ -178,6 +177,14 @@ def run():
         )
     )
 
+    # Set a different color for each bar
+    fig.update_traces(marker_color=['#AA0DFE', '#3283FE', '#85660D', '#782AB6', '#565656', 
+                                    '#1C8356', '#FA0087', '#F7E1A0', '#E2E2E2', '#1CBE4F', 
+                                    '#C4451C', '#DEA0FD', '#FE00FA', '#325A9B', '#FEAF16', 
+                                    '#F8A19F', '#90AD1C', '#F6222E', '#1CFFCE', '#2ED9FF', 
+                                    '#B10DA1', '#C075A6', '#FC1CBF', '#B00068', '#FBE426', '#16FF32'])
+
+    # print(px.colors.qualitative.Alphabet)
     st.plotly_chart(fig)
 
     # ------------- MATCHES PLAYED PER YEAR -------------
@@ -197,9 +204,16 @@ def run():
             tickmode='array',
             tickvals=np.arange(1930, 2015, 4),
             ticktext=np.arange(1930, 2015, 4)
-        ),
-        coloraxis=dict(colorscale='Viridis')
+        )
     )
+
+    # Set a different color for each bar
+    fig.update_traces(marker_color=['#DEA0FD', '#FA0087', '#F6222E', '#1CFFCE', '#85660D', 
+                                    '#FEAF16', '#2ED9FF', '#C075A6', '#B10DA1', '#1CBE4F',
+                                    '#90AD1C', '#F7E1A0', '#FE00FA', '#B00068', '#325A9B', 
+                                    '#782AB6', '#3283FE', '#C4451C', '#E2E2E2', '#1C8356', 
+                                    '#565656', '#F8A19F', '#FC1CBF', '#B10DA1'])
+    
     st.plotly_chart(fig)
 
     # ------------- GOALS SCORED BY MATCHES PLAYED IN EACH YEAR -------------
@@ -217,9 +231,16 @@ def run():
             tickmode='array',
             tickvals=np.arange(1930, 2015, 4),
             ticktext=np.arange(1930, 2015, 4)
-        ),
-        coloraxis=dict(colorscale='Viridis')
+        )
     )
+
+    # Set a different color for each bar
+    fig.update_traces(marker_color=['#F6222E', '#DEA0FD', '#B00068', '#1C8356', '#1CFFCE', 
+                                    '#782AB6', '#F7E1A0', '#1CBE4F', '#2ED9FF', '#FC1CBF', 
+                                    '#90AD1C', '#FEAF16', '#C4451C', '#FE00FA', '#565656', 
+                                    '#85660D', '#B10DA1', '#E2E2E2', '#F8A19F', '#3283FE', 
+                                    '#AA0DFE', '#C075A6', '#325A9B', '#FA0087'])
+
     st.plotly_chart(fig)
 
     # ---------------------- AVERAGE ATTENDANCE PER MATCH ----------------------
