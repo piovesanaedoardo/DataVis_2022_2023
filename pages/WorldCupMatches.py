@@ -177,13 +177,13 @@ def run():
 
     # Team with the most wins
     wins = df_matches[df_matches['Home Team Goals'] > df_matches['Away Team Goals']]['Home Team Name'].append(
-        df_matches[df_matches['Away Team Goals'] > df_matches['Home Team Goals']]['Away Team Name'])
+           df_matches[df_matches['Away Team Goals'] > df_matches['Home Team Goals']]['Away Team Name'])
 
     most_wins_team = wins.value_counts().idxmax()
 
     # Team with the most defeats
     defeats = df_matches[df_matches['Home Team Goals'] < df_matches['Away Team Goals']]['Home Team Name'].append(
-            df_matches[df_matches['Away Team Goals'] < df_matches['Home Team Goals']]['Away Team Name'])
+              df_matches[df_matches['Away Team Goals'] < df_matches['Home Team Goals']]['Away Team Name'])
 
     most_defeats_team = defeats.value_counts().idxmax()
 
@@ -198,7 +198,7 @@ def run():
 
     
     # --- VS_3.1) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
-    #           per numero di partite giocate - table --- #
+    #             per numero di partite giocate - table --- #
 
     # Create a function to determine the winner and loser
     def get_results(row):
@@ -238,9 +238,10 @@ def run():
     st.header("Summary Statistics by Team: Matches Played, Wins, Losses, Win-Loss Ratio, Win-Match Ratio, Loss-Match Ratiovin WC History")
     st.table(team_stats)
 
-    
-    # --- VS_3) Team Statistics by Year --- #
-    def get_results(row):
+
+    # --- VS_3.2) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
+    #             per numero di partite giocate - table by year --- #
+    def get_results_year(row):
         if row['Home Team Goals'] > row['Away Team Goals']:
             return pd.Series([row['Year'], row['Home Team Name'], row['Away Team Name']])
         elif row['Home Team Goals'] < row['Away Team Goals']:
@@ -248,7 +249,7 @@ def run():
         else:
             return pd.Series([np.nan, np.nan, np.nan])
 
-    df_matches[['Year', 'Winner', 'Loser']] = df_matches.apply(get_results, axis=1)
+    df_matches[['Year', 'Winner', 'Loser']] = df_matches.apply(get_results_year, axis=1)
 
     home_matches = df_matches.groupby(['Year', 'Home Team Name']).size()
     away_matches = df_matches.groupby(['Year', 'Away Team Name']).size()
@@ -268,14 +269,36 @@ def run():
     team_stats_yearly = pd.concat([matches_played, wins, losses, win_loss_ratio, win_match_ratio, loss_match_ratio], axis=1)
     team_stats_yearly.columns = ['Matches Played', 'Wins', 'Losses', 'Win-Loss Ratio', 'Win-Match Ratio', 'Loss-Match Ratio']
 
-    # Display the table in Streamlit
+    '''# Display the table in Streamlit
     st.header("Summary Statistics by Team and Year: Matches Played, Wins, Losses, Win-Loss Ratio, Win-Match Ratio, Loss-Match Ratio")
-    st.table(team_stats_yearly)
+    st.table(team_stats_yearly)'''
 
-    # --- VS_4) Line Chart for each country by year --- #
-    countries = df_matches['Home Team Name'].unique()  # replace with your list of countries
+    # --- VS_3.3) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
+    #             per numero di partite giocate - linechart by year --- #  
 
-    for country in countries:
+    import plotly.graph_objects as go
+
+    # Initialize the figure
+    fig = go.Figure()
+
+    # Add lines for each country
+    for country in df_matches['Home Team Name'].unique():
         country_data = team_stats_yearly.xs(country, level=1)
-        st.line_chart(country_data[['Wins', 'Losses']])
+        fig.add_trace(go.Scatter(x=country_data.index, 
+                                y=country_data['Wins'], 
+                                mode='lines', 
+                                name=f'{country} Wins'))
+        fig.add_trace(go.Scatter(x=country_data.index, 
+                                y=country_data['Losses'], 
+                                mode='lines', 
+                                name=f'{country} Losses'))
+
+    # Set the title and labels
+    fig.update_layout(title='Wins & Losses Over the Years for All Teams',
+                    xaxis_title='Year',
+                    yaxis_title='Count')
+
+    # Display the figure in Streamlit
+    st.plotly_chart(fig)
+
     
