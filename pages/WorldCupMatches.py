@@ -231,74 +231,76 @@ def run():
     loss_match_ratio = losses / matches_played
 
     # Combine the statistics into a single DataFrame
-    team_stats = pd.concat([matches_played, wins, losses, win_loss_ratio, win_match_ratio, loss_match_ratio], axis=1)
-    team_stats.columns = ['Matches Played', 'Wins', 'Losses', 'Win-Loss Ratio', 'Win-Match Ratio', 'Loss-Match Ratio']
+    team_stats_1 = pd.concat([matches_played, wins, losses, win_loss_ratio, win_match_ratio, loss_match_ratio], axis=1)
+    team_stats_1.columns = ['Matches Played', 'Wins', 'Losses', 'Win-Loss Ratio', 'Win-Match Ratio', 'Loss-Match Ratio']
 
     # Display the table in Streamlit
     st.header("Summary Statistics by Team: Matches Played, Wins, Losses, Win-Loss Ratio, Win-Match Ratio, Loss-Match Ratiovin WC History")
-    st.table(team_stats)
+    st.table(team_stats_1)
 
 
     # --- VS_3.2) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
     #             per numero di partite giocate - table by year --- #
-    def get_results_year(row):
-        if row['Home Team Goals'] > row['Away Team Goals']:
-            return pd.Series([row['Year'], row['Home Team Name'], row['Away Team Name']])
-        elif row['Home Team Goals'] < row['Away Team Goals']:
-            return pd.Series([row['Year'], row['Away Team Name'], row['Home Team Name']])
+    
+    # Create a new DataFrame to hold team statistics
+    team_stats = pd.DataFrame(columns=['Year', 'Team', 'Matches', 'Wins', 'Losses'])
+
+    for i, row in df_matches.iterrows():
+        home_team = row['Home Team Name']
+        away_team = row['Away Team Name']
+        year = row['Year']
+
+        # Increment the matches played by both teams
+        if home_team not in team_stats['Team'].values:
+            team_stats = team_stats.append({'Year': year, 'Team': home_team, 'Matches': 1, 'Wins': 0, 'Losses': 0}, ignore_index=True)
         else:
-            return pd.Series([np.nan, np.nan, np.nan])
+            team_stats.loc[(team_stats.Team == home_team) & (team_stats.Year == year), 'Matches'] += 1
 
-    df_matches[['Year', 'Winner', 'Loser']] = df_matches.apply(get_results_year, axis=1)
+        if away_team not in team_stats['Team'].values:
+            team_stats = team_stats.append({'Year': year, 'Team': away_team, 'Matches': 1, 'Wins': 0, 'Losses': 0}, ignore_index=True)
+        else:
+            team_stats.loc[(team_stats.Team == away_team) & (team_stats.Year == year), 'Matches'] += 1
 
-    home_matches = df_matches.groupby(['Year', 'Home Team Name']).size()
-    away_matches = df_matches.groupby(['Year', 'Away Team Name']).size()
-    matches_played = (home_matches + away_matches).fillna(0)
+        # Update the win and loss counts based on the goal data
+        if row['Home Team Goals'] > row['Away Team Goals']:
+            # Home team wins, away team loses
+            team_stats.loc[(team_stats.Team == home_team) & (team_stats.Year == year), 'Wins'] += 1
+            team_stats.loc[(team_stats.Team == away_team) & (team_stats.Year == year), 'Losses'] += 1
+        elif row['Home Team Goals'] < row['Away Team Goals']:
+            # Away team wins, home team loses
+            team_stats.loc[(team_stats.Team == away_team) & (team_stats.Year == year), 'Wins'] += 1
+            team_stats.loc[(team_stats.Team == home_team) & (team_stats.Year == year), 'Losses'] += 1
 
-    wins = df_matches.groupby(['Year', 'Winner']).size().reindex(matches_played.index, fill_value=0)
-    losses = df_matches.groupby(['Year', 'Loser']).size().reindex(matches_played.index, fill_value=0)
+    st.header("Summary Statistics by Team: 'Year', 'Team', 'Matches', 'Wins', 'Losses'")
+    st.dataframe(team_stats)
 
-    # Calculate the win-loss ratio
-    win_loss_ratio = wins / losses.replace(0, 1)  # replace 0 with 1 in losses to avoid division by zero
 
-    # Calculate wins/matches and losses/matches
-    win_match_ratio = wins / matches_played
-    loss_match_ratio = losses / matches_played
 
-    # Combine the statistics into a single DataFrame
-    team_stats_yearly = pd.concat([matches_played, wins, losses, win_loss_ratio, win_match_ratio, loss_match_ratio], axis=1)
-    team_stats_yearly.columns = ['Matches Played', 'Wins', 'Losses', 'Win-Loss Ratio', 'Win-Match Ratio', 'Loss-Match Ratio']
 
-    '''# Display the table in Streamlit
-    st.header("Summary Statistics by Team and Year: Matches Played, Wins, Losses, Win-Loss Ratio, Win-Match Ratio, Loss-Match Ratio")
-    st.table(team_stats_yearly)'''
 
+
+
+    '''
     # --- VS_3.3) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
     #             per numero di partite giocate - linechart by year --- #  
 
-    import plotly.graph_objects as go
+    import matplotlib.pyplot as plt
 
-    # Initialize the figure
-    fig = go.Figure()
+    plt.figure(figsize=(12,6))
 
-    # Add lines for each country
-    for country in df_matches['Home Team Name'].unique():
+    countries = df_matches['Home Team Name'].unique()  # replace with your list of countries
+
+    for country in countries:
         country_data = team_stats_yearly.xs(country, level=1)
-        fig.add_trace(go.Scatter(x=country_data.index, 
-                                y=country_data['Wins'], 
-                                mode='lines', 
-                                name=f'{country} Wins'))
-        fig.add_trace(go.Scatter(x=country_data.index, 
-                                y=country_data['Losses'], 
-                                mode='lines', 
-                                name=f'{country} Losses'))
+        plt.plot(country_data.index, country_data['Wins'], label=f'{country} Wins')
+        plt.plot(country_data.index, country_data['Losses'], label=f'{country} Losses')
 
-    # Set the title and labels
-    fig.update_layout(title='Wins & Losses Over the Years for All Teams',
-                    xaxis_title='Year',
-                    yaxis_title='Count')
+    plt.title('Wins & Losses Over the Years for All Teams')
+    plt.xlabel('Year')
+    plt.ylabel('Count')
+    plt.legend(loc='upper left', bbox_to_anchor=(1,1))  # Place the legend outside of the plot
 
-    # Display the figure in Streamlit
-    st.plotly_chart(fig)
+    st.pyplot(plt)
+    '''
 
     
