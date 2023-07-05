@@ -134,4 +134,40 @@ def run():
     # - la squadra con più vittorie nella storia
     # - la squadra con più sconfitte nella storia
     '''
-    st.write('sss')
+
+    # --- VS_1) la partita con più goal della storia / la partita con più pubblico della storia --- #
+
+    # Create a DataFrame with the required information
+    df_matches['Total Goals'] = df_matches['Home Team Goals'] + df_matches['Away Team Goals']
+    max_goals_match = df_matches.loc[df_matches['Total Goals'].idxmax()]
+    max_attendance_match = df_matches.loc[df_matches['Attendance'].idxmax()]
+    combined_table = pd.concat([max_goals_match, max_attendance_match], axis=1)
+    combined_table.columns = ["Match with the Most Goals in History", "Match with the Most Attendance in History"]
+
+    # Display the combined table
+    st.header("Combined Table")
+    st.write(combined_table)
+    
+    # --- VS_2) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia --- #
+
+    # Team with the most wins
+    home_wins = df_matches[df_matches['Home Team Goals'] > df_matches['Away Team Goals']]['Home Team Name']
+    away_wins = df_matches[df_matches['Away Team Goals'] > df_matches['Home Team Goals']]['Away Team Name']
+    all_wins = pd.concat([home_wins, away_wins])
+    most_wins_team = all_wins.value_counts().idxmax()
+
+    # Team with the most defeats
+    home_defeats = df_matches[df_matches['Home Team Goals'] < df_matches['Away Team Goals']]['Home Team Name']
+    away_defeats = df_matches[df_matches['Away Team Goals'] < df_matches['Home Team Goals']]['Away Team Name']
+    all_defeats = pd.concat([home_defeats, away_defeats])
+    most_defeats_team = all_defeats.value_counts().idxmax()
+
+    # Create a DataFrame with the required information
+    combined_table = pd.DataFrame({
+        "Team with the Most Wins in History": [most_wins_team],
+        "Team with the Most Defeats in History": [most_defeats_team]})
+
+    # Display the combined table
+    st.header("Combined Table")
+    st.write(combined_table)
+
