@@ -136,38 +136,87 @@ def run():
     '''
 
     # --- VS_1) la partita con più goal della storia / la partita con più pubblico della storia --- #
-
+    '''
     # Create a DataFrame with the required information
     df_matches['Total Goals'] = df_matches['Home Team Goals'] + df_matches['Away Team Goals']
     max_goals_match = df_matches.loc[df_matches['Total Goals'].idxmax()]
     max_attendance_match = df_matches.loc[df_matches['Attendance'].idxmax()]
-    combined_table = pd.concat([max_goals_match, max_attendance_match], axis=1)
-    combined_table.columns = ["Match with the Most Goals in History", "Match with the Most Attendance in History"]
+    combined_table_max_goals_attendance = pd.concat([max_goals_match, max_attendance_match], axis=1)
+    combined_table_max_goals_attendance.columns = ["Match with the Most Goals in History", "Match with the Most Attendance in History"]
 
     # Display the combined table
-    st.header("Combined Table")
-    st.write(combined_table)
+    st.header("Matches With Most Goals and Attendance in WC History")
+    st.write(combined_table_max_goals_attendance)
+    '''
     
     # --- VS_2) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia --- #
 
     # Team with the most wins
-    home_wins = df_matches[df_matches['Home Team Goals'] > df_matches['Away Team Goals']]['Home Team Name']
-    away_wins = df_matches[df_matches['Away Team Goals'] > df_matches['Home Team Goals']]['Away Team Name']
-    all_wins = pd.concat([home_wins, away_wins])
-    most_wins_team = all_wins.value_counts().idxmax()
+    wins = df_matches[df_matches['Home Team Goals'] > df_matches['Away Team Goals']]['Home Team Name'].append(
+        df_matches[df_matches['Away Team Goals'] > df_matches['Home Team Goals']]['Away Team Name'])
+
+    most_wins_team = wins.value_counts().idxmax()
 
     # Team with the most defeats
-    home_defeats = df_matches[df_matches['Home Team Goals'] < df_matches['Away Team Goals']]['Home Team Name']
-    away_defeats = df_matches[df_matches['Away Team Goals'] < df_matches['Home Team Goals']]['Away Team Name']
-    all_defeats = pd.concat([home_defeats, away_defeats])
-    most_defeats_team = all_defeats.value_counts().idxmax()
+    defeats = df_matches[df_matches['Home Team Goals'] < df_matches['Away Team Goals']]['Home Team Name'].append(
+            df_matches[df_matches['Away Team Goals'] < df_matches['Home Team Goals']]['Away Team Name'])
+
+    most_defeats_team = defeats.value_counts().idxmax()
 
     # Create a DataFrame with the required information
-    combined_table = pd.DataFrame({
+    combined_table_max_wins_losses = pd.DataFrame({
         "Team with the Most Wins in History": [most_wins_team],
         "Team with the Most Defeats in History": [most_defeats_team]})
 
     # Display the combined table
-    st.header("Combined Table")
-    st.write(combined_table)
+    st.header("Team With Most Wins and Losses in WC History")
+    st.table(combined_table_max_wins_losses)
+
+    
+    # --- VS_3) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
+    #           per numero di partite giocate --- #
+
+    # Create a function to determine the winner and loser
+    def get_results(row):
+        if row['Home Team Goals'] > row['Away Team Goals']:
+            return pd.Series([row['Home Team Name'], row['Away Team Name']])
+        elif row['Home Team Goals'] < row['Away Team Goals']:
+            return pd.Series([row['Away Team Name'], row['Home Team Name']])
+        else:
+            return pd.Series([np.nan, np.nan])
+
+    # Apply the function to the DataFrame
+    df_matches[['Winner', 'Loser']] = df_matches.apply(get_results, axis=1)
+
+    # Count the number of matches, wins and losses for each team
+    matches_played = df_matches['Home Team Name'].value_counts() + df_matches['Away Team Name'].value_counts()
+    wins = df_matches['Winner'].value_counts().reindex(matches_played.index, fill_value=0)
+    losses = df_matches['Loser'].value_counts().reindex(matches_played.index, fill_value=0)
+
+    # Calculate the sum of wins and losses
+    total_wins_losses = wins + losses
+
+    # Replace NaN values in matches_played with the sum of wins and losses
+    matches_played = matches_played.fillna(total_wins_losses)
+
+    # Calculate the win-loss ratio
+    win_loss_ratio = wins / losses.replace(0, 1)  # replace 0 with 1 in losses to avoid division by zero
+
+    # Calculate wins/matches and losses/matches
+    win_match_ratio = wins / matches_played
+    loss_match_ratio = losses / matches_played
+
+    # Combine the statistics into a single DataFrame
+    team_stats = pd.concat([matches_played, wins, losses, win_loss_ratio, win_match_ratio, loss_match_ratio], axis=1)
+    team_stats.columns = ['Matches Played', 'Wins', 'Losses', 'Win-Loss Ratio', 'Win-Match Ratio', 'Loss-Match Ratio']
+
+    # Display the table in Streamlit
+    st.header("Summary Statistics by Team: Matches Played, Wins, Losses, Win-Loss Ratio, Win-Match Ratio, Loss-Match Ratiovin WC History")
+    st.table(team_stats)
+    
+
+
+
+
+    
 
