@@ -23,6 +23,30 @@ def run():
     df_matches['Away Team Goals'] = df_matches['Away Team Goals'].fillna(0).astype(int)
     df_matches['Total Home Goals'] = df_matches['Home Team Goals']
     df_matches['Total Away Goals'] = df_matches['Away Team Goals']
+    
+    ''''
+    #Clean the variables internal strings
+    import re
+
+    # Define the cleaning function
+    def clean_value(value):
+        value = str(value)  # Convert to string if not already
+        
+        # Remove leading/trailing whitespaces
+        value = value.strip()
+        
+        # Remove dashes
+        #value = value.replace('-', '')
+        
+        # Remove non-alphanumeric characters except spaces
+        value = re.sub(r'[^a-zA-Z0-9\s]', '', value)
+        
+        return value
+
+    # Apply the cleaning function to specific columns
+    columns_to_clean = ['Home Team Name', 'Away Team Name', 'Stadium', 'City'] #, 'Referee', 'Assistant 1', 'Assistant 2']
+    df_matches[columns_to_clean] = df_matches[columns_to_clean].applymap(clean_value)
+    '''
 
     # --- CREATE GOALS DATASET --- #
     # Reshape the data to have one row per team per match
@@ -173,8 +197,8 @@ def run():
     st.table(combined_table_max_wins_losses)
 
     
-    # --- VS_3) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
-    #           per numero di partite giocate --- #
+    # --- VS_3.1) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
+    #           per numero di partite giocate - table --- #
 
     # Create a function to determine the winner and loser
     def get_results(row):
@@ -213,10 +237,45 @@ def run():
     # Display the table in Streamlit
     st.header("Summary Statistics by Team: Matches Played, Wins, Losses, Win-Loss Ratio, Win-Match Ratio, Loss-Match Ratiovin WC History")
     st.table(team_stats)
-    
-
-
-
 
     
+    # --- VS_3) Team Statistics by Year --- #
+    def get_results(row):
+        if row['Home Team Goals'] > row['Away Team Goals']:
+            return pd.Series([row['Year'], row['Home Team Name'], row['Away Team Name']])
+        elif row['Home Team Goals'] < row['Away Team Goals']:
+            return pd.Series([row['Year'], row['Away Team Name'], row['Home Team Name']])
+        else:
+            return pd.Series([np.nan, np.nan, np.nan])
 
+    df_matches[['Year', 'Winner', 'Loser']] = df_matches.apply(get_results, axis=1)
+
+    home_matches = df_matches.groupby(['Year', 'Home Team Name']).size()
+    away_matches = df_matches.groupby(['Year', 'Away Team Name']).size()
+    matches_played = (home_matches + away_matches).fillna(0)
+
+    wins = df_matches.groupby(['Year', 'Winner']).size().reindex(matches_played.index, fill_value=0)
+    losses = df_matches.groupby(['Year', 'Loser']).size().reindex(matches_played.index, fill_value=0)
+
+    # Calculate the win-loss ratio
+    win_loss_ratio = wins / losses.replace(0, 1)  # replace 0 with 1 in losses to avoid division by zero
+
+    # Calculate wins/matches and losses/matches
+    win_match_ratio = wins / matches_played
+    loss_match_ratio = losses / matches_played
+
+    # Combine the statistics into a single DataFrame
+    team_stats_yearly = pd.concat([matches_played, wins, losses, win_loss_ratio, win_match_ratio, loss_match_ratio], axis=1)
+    team_stats_yearly.columns = ['Matches Played', 'Wins', 'Losses', 'Win-Loss Ratio', 'Win-Match Ratio', 'Loss-Match Ratio']
+
+    # Display the table in Streamlit
+    st.header("Summary Statistics by Team and Year: Matches Played, Wins, Losses, Win-Loss Ratio, Win-Match Ratio, Loss-Match Ratio")
+    st.table(team_stats_yearly)
+
+    # --- VS_4) Line Chart for each country by year --- #
+    countries = df_matches['Home Team Name'].unique()  # replace with your list of countries
+
+    for country in countries:
+        country_data = team_stats_yearly.xs(country, level=1)
+        st.line_chart(country_data[['Wins', 'Losses']])
+    
