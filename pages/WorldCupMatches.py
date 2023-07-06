@@ -192,9 +192,36 @@ def run():
         "Team with the Most Wins in History": [most_wins_team],
         "Team with the Most Defeats in History": [most_defeats_team]})
 
-    # Display the combined table
+    # Transpose the dataframe
+    #combined_table_max_wins_losses = combined_table_max_wins_losses.T.reset_index()
+
+    # Rename the columns
+    combined_table_max_wins_losses.columns = ['Record', 'Team']
+
+    # Display the transposed table with some style
     st.header("Team With Most Wins and Losses in WC History")
-    st.table(combined_table_max_wins_losses)
+    st.markdown("""
+    <style>
+    .dataframe {
+        border: 2px solid black;
+        background-color: #fafafa;
+    }
+    .dataframe tbody tr th {
+        vertical-align: top;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    .dataframe tbody tr td {
+        font-size: 14px;
+    }
+    .dataframe thead th {
+        text-align: center;
+        background-color: #6c757d;
+        color: white;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    st.table(combined_table_max_wins_losses.set_index('Record'))
 
     
     # --- VS_3.1) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
