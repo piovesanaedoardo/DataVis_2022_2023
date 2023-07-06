@@ -159,8 +159,10 @@ def run():
     # - la squadra con più sconfitte nella storia
     '''
 
+    #
     # --- VS_1) la partita con più goal della storia / la partita con più pubblico della storia --- #
-    '''
+    #
+    
     # Create a DataFrame with the required information
     df_matches['Total Goals'] = df_matches['Home Team Goals'] + df_matches['Away Team Goals']
     max_goals_match = df_matches.loc[df_matches['Total Goals'].idxmax()]
@@ -170,10 +172,35 @@ def run():
 
     # Display the combined table
     st.header("Matches With Most Goals and Attendance in WC History")
-    st.write(combined_table_max_goals_attendance)
-    '''
+
+    # Add table styling
+    st.markdown("""
+    <style>
+    .dataframe {
+        border: 2px solid black;
+        background-color: #fafafa;
+    }
+    .dataframe tbody tr th {
+        vertical-align: top;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    .dataframe tbody tr td {
+        font-size: 14px;
+    }
+    .dataframe thead th {
+        text-align: center;
+        background-color: #6c757d;
+        color: white;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    st.table(combined_table_max_goals_attendance)
+
     
+    #
     # --- VS_2) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia --- #
+    #
 
     # Team with the most wins
     wins = df_matches[df_matches['Home Team Goals'] > df_matches['Away Team Goals']]['Home Team Name'].append(
@@ -223,7 +250,7 @@ def run():
     """, unsafe_allow_html=True)
     st.table(combined_table_max_wins_losses.set_index('Record'))
 
-    
+    #
     # --- VS_3.1) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
     #             per numero di partite giocate - table --- #
 
@@ -265,9 +292,9 @@ def run():
     st.header("Summary Statistics by Team: Matches Played, Wins, Losses, Win-Loss Ratio, Win-Match Ratio, Loss-Match Ratiovin WC History")
     st.table(team_stats_1)
 
-
-    # --- VS_3.2) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
-    #             - table by year --- #
+    #
+    # --- VS_3.2) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia - table by year --- #
+    # 
     
     import plotly.express as px
 
