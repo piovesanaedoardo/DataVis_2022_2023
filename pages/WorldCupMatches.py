@@ -240,67 +240,80 @@ def run():
 
 
     # --- VS_3.2) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
-    #             per numero di partite giocate - table by year --- #
+    #             - table by year --- #
     
-    # Create a new DataFrame to hold team statistics
-    team_stats = pd.DataFrame(columns=['Year', 'Team', 'Matches', 'Wins', 'Losses'])
+    import plotly.express as px
 
-    for i, row in df_matches.iterrows():
-        home_team = row['Home Team Name']
-        away_team = row['Away Team Name']
-        year = row['Year']
+    # Create an empty DataFrame
+    team_stats = pd.DataFrame()
 
-        # Increment the matches played by both teams
-        if home_team not in team_stats['Team'].values:
-            team_stats = team_stats.append({'Year': year, 'Team': home_team, 'Matches': 1, 'Wins': 0, 'Losses': 0}, ignore_index=True)
-        else:
-            team_stats.loc[(team_stats.Team == home_team) & (team_stats.Year == year), 'Matches'] += 1
+    # For each year, count the number of matches, wins, and losses for each team
+    for year in df_matches['Year'].unique():
+        # Get all matches in this year
+        matches_this_year = df_matches[df_matches['Year'] == year]
 
-        if away_team not in team_stats['Team'].values:
-            team_stats = team_stats.append({'Year': year, 'Team': away_team, 'Matches': 1, 'Wins': 0, 'Losses': 0}, ignore_index=True)
-        else:
-            team_stats.loc[(team_stats.Team == away_team) & (team_stats.Year == year), 'Matches'] += 1
+        # Count the matches, wins, and losses for each team
+        home_teams = matches_this_year['Home Team Name'].value_counts().reset_index()
+        away_teams = matches_this_year['Away Team Name'].value_counts().reset_index()
 
-        # Update the win and loss counts based on the goal data
-        if row['Home Team Goals'] > row['Away Team Goals']:
-            # Home team wins, away team loses
-            team_stats.loc[(team_stats.Team == home_team) & (team_stats.Year == year), 'Wins'] += 1
-            team_stats.loc[(team_stats.Team == away_team) & (team_stats.Year == year), 'Losses'] += 1
-        elif row['Home Team Goals'] < row['Away Team Goals']:
-            # Away team wins, home team loses
-            team_stats.loc[(team_stats.Team == away_team) & (team_stats.Year == year), 'Wins'] += 1
-            team_stats.loc[(team_stats.Team == home_team) & (team_stats.Year == year), 'Losses'] += 1
+        home_wins = matches_this_year[matches_this_year['Home Team Goals'] > matches_this_year['Away Team Goals']]['Home Team Name'].value_counts().reset_index()
+        away_wins = matches_this_year[matches_this_year['Away Team Goals'] > matches_this_year['Home Team Goals']]['Away Team Name'].value_counts().reset_index()
 
-    st.header("Summary Statistics by Team: 'Year', 'Team', 'Matches', 'Wins', 'Losses'")
-    st.dataframe(team_stats)
+        home_losses = matches_this_year[matches_this_year['Home Team Goals'] < matches_this_year['Away Team Goals']]['Home Team Name'].value_counts().reset_index()
+        away_losses = matches_this_year[matches_this_year['Away Team Goals'] < matches_this_year['Home Team Goals']]['Away Team Name'].value_counts().reset_index()
 
+        # Merge the counts into one DataFrame
+        teams = home_teams.merge(away_teams, how='outer', on='index').fillna(0)
+        wins = home_wins.merge(away_wins, how='outer', on='index').fillna(0)
+        losses = home_losses.merge(away_losses, how='outer', on='index').fillna(0)
 
+        # Compute the total number of matches, wins, and losses
+        teams['matches'] = teams['Home Team Name'] + teams['Away Team Name']
+        wins['wins'] = wins['Home Team Name'] + wins['Away Team Name']
+        losses['losses'] = losses['Home Team Name'] + losses['Away Team Name']
 
+        # Merge all stats into one DataFrame and append it to the main DataFrame
+        year_stats = teams.merge(wins, how='outer', on='index').merge(losses, how='outer', on='index')
+        year_stats['year'] = year
 
+        # Append the stats of this year to the main DataFrame
+        team_stats = pd.concat([team_stats, year_stats])
 
+    # Rename the columns
+    team_stats.columns = ['Team', 'Home Matches', 'Away Matches', 'Matches', 'Home Wins', 'Away Wins', 'Wins', 'Home Losses', 'Away Losses', 'Losses', 'Year']
 
+    # --- VS_3.2.1) linechart by year and country --- #
 
-    '''
-    # --- VS_3.3) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
-    #             per numero di partite giocate - linechart by year --- #  
+    # Create a multi-select widget for the teams
+    selected_teams = st.multiselect('Select teams', team_stats['Team'].unique())
 
-    import matplotlib.pyplot as plt
+    # Filter data based on the selected teams
+    filtered_data = team_stats[team_stats['Team'].isin(selected_teams)]
 
-    plt.figure(figsize=(12,6))
+    fig = px.line(filtered_data, x='Year', y='Matches', color='Team',
+                title="Number of Matches Played by Each Team Over the Years",
+                labels={'Matches': 'Number of Matches', 'Year': 'Year'}, # renaming labels
+                hover_data={"Year": True, "Matches": ':.2f'}) # hover data
 
-    countries = df_matches['Home Team Name'].unique()  # replace with your list of countries
+    fig.update_layout(
+        title_font_family="Arial",  # setting the title font
+        title_font_color="RebeccaPurple",  # setting the title color
+        title_font_size=24,  # setting the title size
+        autosize=False,  # turn off autosize
+        width=800,  # width
+        height=500,  # height
+        #paper_bgcolor="LightSteelBlue",  # setting the paper background color
+    )
 
-    for country in countries:
-        country_data = team_stats_yearly.xs(country, level=1)
-        plt.plot(country_data.index, country_data['Wins'], label=f'{country} Wins')
-        plt.plot(country_data.index, country_data['Losses'], label=f'{country} Losses')
+    fig.update_xaxes(
+        title_text = 'Year',  # xaxis label
+        tickangle = -45,  # xaxis label angle
+        title_font = {"size": 14},  # xaxis label size
+        title_standoff = 25)  # distance of the label from the axis
 
-    plt.title('Wins & Losses Over the Years for All Teams')
-    plt.xlabel('Year')
-    plt.ylabel('Count')
-    plt.legend(loc='upper left', bbox_to_anchor=(1,1))  # Place the legend outside of the plot
+    fig.update_yaxes(
+        title_text = 'Number of Matches',  # yaxis label
+        title_font = {"size": 14},  # yaxis label size
+        title_standoff = 25)  # distance of the label from the axis
 
-    st.pyplot(plt)
-    '''
-
-    
+    st.plotly_chart(fig)
