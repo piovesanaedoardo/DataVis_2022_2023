@@ -23,7 +23,8 @@ def run():
     df_matches['Away Team Goals'] = df_matches['Away Team Goals'].fillna(0).astype(int)
     df_matches['Total Home Goals'] = df_matches['Home Team Goals']
     df_matches['Total Away Goals'] = df_matches['Away Team Goals']
-    
+    df_matches = df_matches.dropna()
+
     ''''
     #Clean the variables internal strings
     import re
@@ -162,7 +163,7 @@ def run():
     #
     # --- VS_1) la partita con più goal della storia / la partita con più pubblico della storia --- #
     #
-    
+
     # Create a DataFrame with the required information
     df_matches['Total Goals'] = df_matches['Home Team Goals'] + df_matches['Away Team Goals']
     max_goals_match = df_matches.loc[df_matches['Total Goals'].idxmax()]
@@ -203,29 +204,24 @@ def run():
     #
 
     # Team with the most wins
-    wins = df_matches[df_matches['Home Team Goals'] > df_matches['Away Team Goals']]['Home Team Name'].append(
-           df_matches[df_matches['Away Team Goals'] > df_matches['Home Team Goals']]['Away Team Name'])
-
+    wins = pd.concat([df_matches[df_matches['Home Team Goals'] > df_matches['Away Team Goals']]['Home Team Name'],
+                    df_matches[df_matches['Away Team Goals'] > df_matches['Home Team Goals']]['Away Team Name']])
     most_wins_team = wins.value_counts().idxmax()
 
     # Team with the most defeats
-    defeats = df_matches[df_matches['Home Team Goals'] < df_matches['Away Team Goals']]['Home Team Name'].append(
-              df_matches[df_matches['Away Team Goals'] < df_matches['Home Team Goals']]['Away Team Name'])
-
+    defeats = pd.concat([df_matches[df_matches['Home Team Goals'] < df_matches['Away Team Goals']]['Home Team Name'],
+                        df_matches[df_matches['Away Team Goals'] < df_matches['Home Team Goals']]['Away Team Name']])
     most_defeats_team = defeats.value_counts().idxmax()
 
     # Create a DataFrame with the required information
     combined_table_max_wins_losses = pd.DataFrame({
-        "Team with the Most Wins in History": [most_wins_team],
-        "Team with the Most Defeats in History": [most_defeats_team]})
+        "Record": ["Team with the Most Wins in History", "Team with the Most Defeats in History"],
+        "Team": [most_wins_team, most_defeats_team]})
 
-    # Transpose the dataframe
-    #combined_table_max_wins_losses = combined_table_max_wins_losses.T.reset_index()
+    # Set 'Record' as the index
+    combined_table_max_wins_losses.set_index('Record', inplace=True)
 
-    # Rename the columns
-    combined_table_max_wins_losses.columns = ['Record', 'Team']
-
-    # Display the transposed table with some style
+    # Display the table with style
     st.header("Team With Most Wins and Losses in WC History")
     st.markdown("""
     <style>
@@ -248,7 +244,8 @@ def run():
     }
     </style>
     """, unsafe_allow_html=True)
-    st.table(combined_table_max_wins_losses.set_index('Record'))
+    st.table(combined_table_max_wins_losses)
+
 
     #
     # --- VS_3.1) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
