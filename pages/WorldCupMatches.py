@@ -75,7 +75,7 @@ def run():
     st.markdown("Select the checkboxes below to display the corresponding dataset:")
     
     #
-    # --- VS_1) la partita con più goal della storia / la partita con più pubblico della storia --- #
+    # --- DF_2) la partita con più goal della storia / la partita con più pubblico della storia --- #
     #
 
     # Create a DataFrame with the required information
@@ -116,7 +116,7 @@ def run():
         st.table(combined_table_max_goals_attendance)
     
     #
-    # --- VS_2) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia --- #
+    # --- DF_3) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia --- #
     #
             
     # Team with the most wins
@@ -166,7 +166,7 @@ def run():
         st.table(combined_table_max_wins_losses)
    
     #
-    # --- VS_3.1) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
+    # --- DF_4) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
     #             per numero di partite giocate - table --- #
 
     # Create a function to determine the winner and loser
@@ -209,7 +209,7 @@ def run():
         st.table(team_stats_1)
    
     #
-    # --- VS_3.2) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia - table by year --- #
+    # --- DF_5) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia - table by year --- #
     # 
     import plotly.express as px
 
@@ -256,16 +256,20 @@ def run():
         st.table(team_stats)
 
     #
-    # --- VS_3.2.1) linechart by year and country --- #
+    # --- VS_1) linechart by year and country --- #
     #
 
+    st.markdown("### Different visualizations of the data")
+    
+    st.markdown("Visual 1: Line chart of matches played by team over years")
+
     # Create a multi-select widget for the teams
-    selected_teams = st.multiselect('Select teams', team_stats['Team'].unique())
+    selected_teams_1 = st.multiselect('Select teams', team_stats['Team'].unique())
 
     # Filter data based on the selected teams
-    filtered_data = team_stats[team_stats['Team'].isin(selected_teams)]
+    filtered_data_1 = team_stats[team_stats['Team'].isin(selected_teams_1)]
 
-    fig = px.line(filtered_data, x='Year', y='Matches', color='Team',
+    fig = px.line(filtered_data_1, x='Year', y='Matches', color='Team',
                 title="Number of Matches Played by Each Team Over the Years",
                 labels={'Matches': 'Number of Matches', 'Year': 'Year'}, # renaming labels
                 hover_data={"Year": True, "Matches": ':.2f'}) # hover data
@@ -293,6 +297,91 @@ def run():
 
     st.plotly_chart(fig)
 
+    #
+    # --- VS_2) A heat map showing the number of wins for each team over the years --- #
+    #
+
+    st.markdown("Visual 2: Heatmap of wins by team over years")
+
+    import plotly.graph_objects as go
+
+    # Create a list of unique team names
+    team_list_1 = team_stats['Team'].unique().tolist()
+
+    # Team selection filter
+    selected_teams_2 = st.multiselect('Select Teams', team_list_1)
+
+    # Filter the team_stats DataFrame based on the selected teams
+    filtered_stats_1 = team_stats[team_stats['Team'].isin(selected_teams_2)]
+
+    # Pivot the filtered DataFrame
+    team_stats_wide_1 = filtered_stats_1.pivot(index='Team', columns='Year', values='Wins').fillna(0)
+
+    # Create the heatmap figure
+    fig1 = go.Figure(data=go.Heatmap(z=team_stats_wide_1.values,
+                                     x=team_stats_wide_1.columns,
+                                     y=team_stats_wide_1.index,
+                                     colorscale='RdYlGn'))
+
+    # Set the title, x-label, y-label, and legend
+    fig1.update_layout(
+        title="Team Statistics",
+        xaxis_title="Year",
+        yaxis_title="Team",
+        legend_title="Number of Wins"
+    )
+
+    # Label all years dynamically
+    fig1.update_xaxes(type='category', tickangle=-45)
+
+    # Display the figure using Plotly in Streamlit
+    st.plotly_chart(fig1)
+
+
+    #
+    # --- VS_3) A heat map showing the number of wins for each team over the years --- #
+    #
+
+    st.markdown("Visual 3: Proportion of Wins and Losses to the Number of Matches for a Specific Team")
+
+    # Team selection filter
+    team_select = st.selectbox('Select a team', team_stats['Team'].unique(), key="team_select_fig_2")
+    selected_team_stats = team_stats[team_stats['Team'] == team_select]
+
+    # Year selection filter
+    year_select = st.selectbox('Select a year', team_stats['Year'].unique(), key="year_select_fig_2")
+    selected_team_stats = team_stats[(team_stats['Team'] == team_select) & (team_stats['Year'] == year_select)]
+
+    #plot
+    if len(selected_team_stats) == 0:
+            st.error("No records found for the selected team and year.")
+    else:
+            # Calculate proportions
+            total_matches = selected_team_stats['Matches'].values[0]
+            home_wins = selected_team_stats['Home Wins'].values[0]
+            away_wins = selected_team_stats['Away Wins'].values[0]
+            home_losses = selected_team_stats['Home Losses'].values[0]
+            away_losses = selected_team_stats['Away Losses'].values[0]
+
+            # Calculate proportions of wins and losses
+            win_proportion = (home_wins + away_wins) / total_matches
+            loss_proportion = (home_losses + away_losses) / total_matches
+
+            # Create the pie chart figure
+            fig2 = go.Figure(data=[go.Pie(labels=['Wins', 'Losses'], 
+                                        values=[win_proportion, loss_proportion])])
+
+            # Set the title
+            fig2.update_layout(
+                title=f"Proportion of Wins and Losses to the Number of Matches ({team_select} - {year_select})"
+            )
+
+            # Display the figure using Plotly in Streamlit
+            st.plotly_chart(fig2)
+
+
+
+    '''
     #
     # --- VS_4) CREATE A RACING CHART --- #
     # create a racing bar chart to visualize the total goals scored by each team in each year
@@ -387,3 +476,4 @@ def run():
     # - la squadra con più vittorie nella storia
     # - la squadra con più sconfitte nella storia
  
+'''
