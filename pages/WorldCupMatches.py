@@ -349,45 +349,53 @@ def run():
 
 
     #
-    # --- VS_3) A heat map showing the number of wins for each team over the years --- #
+    # --- VS_3) Pie chart Proportion of Wins and Losses to the Number of Matches for a Specific Team --- #
     #
 
     st.markdown("Visual 3: Proportion of Wins and Losses to the Number of Matches for a Specific Team")
 
     # Team selection filter
     team_select = st.selectbox('Select a team', team_stats['Team'].unique(), key="team_select_fig_2")
-    selected_team_stats = team_stats[team_stats['Team'] == team_select]
+
+    # Add 'ALL' to year list
+    years = list(team_stats['Year'].unique())
+    years = ['ALL'] + years
 
     # Year selection filter
-    year_select = st.selectbox('Select a year', team_stats['Year'].unique(), key="year_select_fig_2")
-    selected_team_stats = team_stats[(team_stats['Team'] == team_select) & (team_stats['Year'] == year_select)]
+    year_select = st.selectbox('Select a year', years, key="year_select_fig_2")
+
+    if year_select != 'ALL':
+        selected_team_stats = team_stats[(team_stats['Team'] == team_select) & (team_stats['Year'] == year_select)]
+    else:
+        selected_team_stats = team_stats[team_stats['Team'] == team_select]
 
     #plot
     if len(selected_team_stats) == 0:
-            st.error("No records found for the selected team and year.")
+        st.error("No records found for the selected team and year.")
     else:
-            # Calculate proportions
-            total_matches = selected_team_stats['Matches'].values[0]
-            home_wins = selected_team_stats['Home Wins'].values[0]
-            away_wins = selected_team_stats['Away Wins'].values[0]
-            home_losses = selected_team_stats['Home Losses'].values[0]
-            away_losses = selected_team_stats['Away Losses'].values[0]
+        # Calculate proportions
+        total_matches = selected_team_stats['Matches'].sum()
+        home_wins = selected_team_stats['Home Wins'].sum()
+        away_wins = selected_team_stats['Away Wins'].sum()
+        home_losses = selected_team_stats['Home Losses'].sum()
+        away_losses = selected_team_stats['Away Losses'].sum()
 
-            # Calculate proportions of wins and losses
-            win_proportion = (home_wins + away_wins) / total_matches
-            loss_proportion = (home_losses + away_losses) / total_matches
+        # Calculate proportions of wins and losses
+        win_proportion = (home_wins + away_wins) / total_matches
+        loss_proportion = (home_losses + away_losses) / total_matches
 
-            # Create the pie chart figure
-            fig2 = go.Figure(data=[go.Pie(labels=['Wins', 'Losses'], 
-                                        values=[win_proportion, loss_proportion])])
+        # Create the pie chart figure
+        fig2 = go.Figure(data=[go.Pie(labels=['Wins', 'Losses'], 
+                                    values=[win_proportion, loss_proportion])])
 
-            # Set the title
-            fig2.update_layout(
-                title=f"Proportion of Wins and Losses to the Number of Matches ({team_select} - {year_select})"
-            )
+        # Set the title
+        fig2.update_layout(
+            title=f"Proportion of Wins and Losses to the Number of Matches ({team_select} - {year_select})"
+        )
 
-            # Display the figure using Plotly in Streamlit
-            st.plotly_chart(fig2)
+        # Display the figure using Plotly in Streamlit
+        st.plotly_chart(fig2)
+
 
 
     ### --- VS4 - REFEREES --- ###
