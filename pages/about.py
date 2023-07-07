@@ -11,6 +11,11 @@ def run():
     and tournament details, which can be effectively visualized to gain insights into the game's evolution over time. 
     Secondly, the World Cup captures the attention of millions of fans worldwide, making it an exciting and relatable subject for data visualization. 
     The data is taken from [Kaggle](https://www.kaggle.com/abecklas/fifa-world-cup).
+                
+    This project aims to visualize the World Cup data in a way that is both informative and engaging. We have divided the project into three main sections::
+    - **World Cup Overview**: This section provides an overview of the World Cup's history and statistics
+    - **World Cup Players**: This section allows users to explore the players' statistics
+    - **World Cup Matches**: This section allows users to explore the matches' statistics
     ''')
 
     # add image
