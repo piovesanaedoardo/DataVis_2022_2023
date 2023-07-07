@@ -23,10 +23,20 @@ def run():
     df_matches['Away Team Goals'] = df_matches['Away Team Goals'].fillna(0).astype(int)
     df_matches['Total Home Goals'] = df_matches['Home Team Goals']
     df_matches['Total Away Goals'] = df_matches['Away Team Goals']
+    df_matches['Total Goals']      = df_matches['Home Team Goals'] + df_matches['Away Team Goals']
+
     df_matches = df_matches.dropna()
 
     #Clean the variables internal strings
     import re
+
+    # This function will return the nationality found within brackets in a string.
+    def extract_nationality_of_referees(referee):
+        nationality = re.search(r'\((.*?)\)', referee)
+        return nationality.group(1) if nationality else None # If no nationality is found, it will return None.
+
+    # Create the new column 'Referee_nationality'
+    df_matches['Referee_nationality'] = df_matches['Referee'].apply(extract_nationality_of_referees)
 
     # Define the cleaning function
     def clean_value(value):
@@ -259,7 +269,7 @@ def run():
     # --- VS_1) linechart by year and country --- #
     #
 
-    st.markdown("### Different visualizations of the data")
+    st.markdown("### Visualizations - Teams")
     
     st.markdown("Visual 1: Line chart of matches played by team over years")
 
@@ -378,6 +388,91 @@ def run():
 
             # Display the figure using Plotly in Streamlit
             st.plotly_chart(fig2)
+
+
+    ### --- VS4 - REFEREES --- ###
+
+    st.markdown("### Visualizations - Referees")
+    
+    import plotly.graph_objects as go
+
+    # Add 'ALL' to year list
+    years = list(df_matches['Year'].unique())
+    years = ['ALL'] + years
+
+    # Define selectboxes
+    selected_year = st.selectbox('Select a year', years)
+
+    # Filter the referees and nationalities based on the selected year
+    if selected_year != 'ALL':
+        referees_for_selected_year = ['EMPTY'] + list(df_matches[df_matches['Year'] == selected_year]['Referee'].unique())
+        nationalities_for_selected_year = ['EMPTY'] + list(df_matches[df_matches['Year'] == selected_year]['Referee_nationality'].unique())
+    else:
+        referees_for_selected_year = ['EMPTY'] + list(df_matches['Referee'].unique())
+        nationalities_for_selected_year = ['EMPTY'] + list(df_matches['Referee_nationality'].unique())
+
+    selected_referee = st.selectbox('Select a referee', referees_for_selected_year)
+    selected_nationality = st.selectbox('Select a nationality', nationalities_for_selected_year)
+
+    # Filter data based on selected year
+    if selected_year != 'ALL':
+        filtered_year_matches = df_matches[df_matches['Year'] == selected_year]
+    else:
+        filtered_year_matches = df_matches
+
+    # Filter data for referee and nationality
+    if selected_referee != 'EMPTY':
+        filtered_referee_matches = filtered_year_matches[filtered_year_matches['Referee'] == selected_referee]
+        ref_group = selected_referee
+    else:
+        filtered_referee_matches = pd.DataFrame()
+
+    if selected_nationality != 'EMPTY':
+        filtered_nationality_matches = filtered_year_matches[filtered_year_matches['Referee_nationality'] == selected_nationality]
+        nat_group = selected_nationality
+    else:
+        filtered_nationality_matches = pd.DataFrame()
+
+    if not filtered_referee_matches.empty:
+        # Plot 1: Number of matches refereed
+        matches_refereed = filtered_year_matches['Referee'].value_counts()
+        selected_referee_matches = matches_refereed[ref_group]
+        fig1 = go.Figure(data=[go.Histogram(x=matches_refereed.values,
+                                            marker_color='gray',
+                                            name='All referees')])
+        fig1.add_trace(go.Histogram(x=[selected_referee_matches],
+                                    marker_color='red',
+                                    name=ref_group))
+        fig1.update_layout(barmode='overlay',
+                        title_text='Number of matches refereed by referees',
+                        xaxis_title='Number of matches',
+                        yaxis_title='Number of referees')
+        fig1.update_traces(opacity=0.75)
+        st.plotly_chart(fig1)
+
+    if not filtered_nationality_matches.empty:
+        # Plot 2: Number of matches refereed
+        matches_refereed = filtered_year_matches['Referee_nationality'].value_counts()
+        selected_nationality_matches = matches_refereed[nat_group]
+        fig2 = go.Figure(data=[go.Histogram(x=matches_refereed.values,
+                                            marker_color='gray',
+                                            name='All nationalities')])
+        fig2.add_trace(go.Histogram(x=[selected_nationality_matches],
+                                    marker_color='red',
+                                    name=nat_group))
+        fig2.update_layout(barmode='overlay',
+                        title_text='Number of matches refereed by referees of selected nationality',
+                        xaxis_title='Number of matches',
+                        yaxis_title='Number of nationalities')
+        fig2.update_traces(opacity=0.75)
+        st.plotly_chart(fig2)
+    else:
+        st.write("No data to display. Please select a referee or a nationality.")
+
+
+
+
+
 
 
 
