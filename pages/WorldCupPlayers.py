@@ -148,7 +148,7 @@ def run():
     top_players = player_cards.head(20)
 
     # Assign a random color to each team
-    color_palette = plotly.colors.qualitative.Alphabet
+    color_palette = plotly.colors.qualitative.Plotly
 
     # Create the color mapping dictionary for teams and colors
     team_colors = {team: color_palette[i % len(color_palette)] for i, team in enumerate(
