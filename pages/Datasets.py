@@ -18,6 +18,11 @@ def run():
     df_players = pd.read_csv("WorldCupPlayers.csv")
     df_world_cups = pd.read_csv("WorldCups.csv")
 
+    # remove rows with missing values
+    df_matches = df_matches.dropna()
+    df_players = df_players.dropna()
+    df_world_cups = df_world_cups.dropna()
+
     st.title("World Cup Data Visualization")
 
     # ---------------------- SIDEBAR ----------------------
