@@ -71,6 +71,9 @@ def run():
 
     #st.write(df_goals)
     
+    st.markdown("### Check the summary statistics of the data")
+    st.markdown("Select the checkboxes below to display the corresponding dataset:")
+    
     #
     # --- VS_1) la partita con più goal della storia / la partita con più pubblico della storia --- #
     #
@@ -82,38 +85,40 @@ def run():
     combined_table_max_goals_attendance = pd.concat([max_goals_match, max_attendance_match], axis=1)
     combined_table_max_goals_attendance.columns = ["Match with the Most Goals in History", "Match with the Most Attendance in History"]
 
-    # Display the combined table
-    st.header("Matches With Most Goals and Attendance in WC History")
+    #diplay in steamlit
+    if st.checkbox("Display Match with the Most Goals and Attendance in WC History"):
 
-    # Add table styling
-    st.markdown("""
-    <style>
-    .dataframe {
-        border: 2px solid black;
-        background-color: #fafafa;
-    }
-    .dataframe tbody tr th {
-        vertical-align: top;
-        font-size: 16px;
-        font-weight: bold;
-    }
-    .dataframe tbody tr td {
-        font-size: 14px;
-    }
-    .dataframe thead th {
-        text-align: center;
-        background-color: #6c757d;
-        color: white;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    st.table(combined_table_max_goals_attendance)
+        # Display the combined table
+        st.header("Matches With Most Goals and Attendance in WC History")
 
+        # Add table styling
+        st.markdown("""
+        <style>
+        .dataframe {
+            border: 2px solid black;
+            background-color: #fafafa;
+        }
+        .dataframe tbody tr th {
+            vertical-align: top;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .dataframe tbody tr td {
+            font-size: 14px;
+        }
+        .dataframe thead th {
+            text-align: center;
+            background-color: #6c757d;
+            color: white;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        st.table(combined_table_max_goals_attendance)
     
     #
     # --- VS_2) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia --- #
     #
-
+            
     # Team with the most wins
     wins = pd.concat([df_matches[df_matches['Home Team Goals'] > df_matches['Away Team Goals']]['Home Team Name'],
                     df_matches[df_matches['Away Team Goals'] > df_matches['Home Team Goals']]['Away Team Name']])
@@ -132,32 +137,34 @@ def run():
     # Set 'Record' as the index
     combined_table_max_wins_losses.set_index('Record', inplace=True)
 
-    # Display the table with style
-    st.header("Team With Most Wins and Losses in WC History")
-    st.markdown("""
-    <style>
-    .dataframe {
-        border: 2px solid black;
-        background-color: #fafafa;
-    }
-    .dataframe tbody tr th {
-        vertical-align: top;
-        font-size: 16px;
-        font-weight: bold;
-    }
-    .dataframe tbody tr td {
-        font-size: 14px;
-    }
-    .dataframe thead th {
-        text-align: center;
-        background-color: #6c757d;
-        color: white;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    st.table(combined_table_max_wins_losses)
+    #display in steamlit
+    if st.checkbox("Display Team with the Most Wins and Losses in WC History"):
 
-
+        # Display the table with style
+        st.header("Team With Most Wins and Losses in WC History")
+        st.markdown("""
+        <style>
+        .dataframe {
+            border: 2px solid black;
+            background-color: #fafafa;
+        }
+        .dataframe tbody tr th {
+            vertical-align: top;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .dataframe tbody tr td {
+            font-size: 14px;
+        }
+        .dataframe thead th {
+            text-align: center;
+            background-color: #6c757d;
+            color: white;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        st.table(combined_table_max_wins_losses)
+   
     #
     # --- VS_3.1) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia 
     #             per numero di partite giocate - table --- #
@@ -195,15 +202,15 @@ def run():
     # Combine the statistics into a single DataFrame
     team_stats_1 = pd.concat([matches_played, wins, losses, win_loss_ratio, win_match_ratio, loss_match_ratio], axis=1)
     team_stats_1.columns = ['Matches Played', 'Wins', 'Losses', 'Win-Loss Ratio', 'Win-Match Ratio', 'Loss-Match Ratio']
-
-    # Display the table in Streamlit
-    st.header("Summary Statistics by Team: Matches Played, Wins, Losses, Win-Loss Ratio, Win-Match Ratio, Loss-Match Ratiovin WC History")
-    st.table(team_stats_1)
-
+    
+    if st.checkbox("Display Summary Statistics by Team"):
+        # Display the table in Streamlit
+        st.header("Summary Statistics by Team: Matches Played, Wins, Losses, Win-Loss Ratio, Win-Match Ratio, Loss-Match Ratiovin WC History")
+        st.table(team_stats_1)
+   
     #
     # --- VS_3.2) la squadra con più vittorie nella storia / la squadra con più sconfitte nella storia - table by year --- #
     # 
-    
     import plotly.express as px
 
     # Create an empty DataFrame
@@ -244,7 +251,13 @@ def run():
     # Rename the columns
     team_stats.columns = ['Team', 'Home Matches', 'Away Matches', 'Matches', 'Home Wins', 'Away Wins', 'Wins', 'Home Losses', 'Away Losses', 'Losses', 'Year']
 
+    #display in steamlit
+    if st.checkbox("Display Summary Statistics by Year"):
+        st.table(team_stats)
+
+    #
     # --- VS_3.2.1) linechart by year and country --- #
+    #
 
     # Create a multi-select widget for the teams
     selected_teams = st.multiselect('Select teams', team_stats['Team'].unique())
@@ -280,7 +293,7 @@ def run():
 
     st.plotly_chart(fig)
 
-
+    #
     # --- VS_4) CREATE A RACING CHART --- #
     # create a racing bar chart to visualize the total goals scored by each team in each year
 
