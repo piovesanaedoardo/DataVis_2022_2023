@@ -57,7 +57,7 @@ def run():
     df_players['Team Initials'] = df_players['Team Initials'].replace(
         'TCH', 'CZE')
     # _______________________________________________________________________________________
-
+    st.subheader("Number of Players by Team")
     # Barplot number of players by team
     team_counts = df_players.groupby('Team Initials')[
         'Player Name'].count().reset_index()
@@ -75,7 +75,7 @@ def run():
     fig.update_layout(bargap=0.2)
     st.write(fig)
     # _______________________________________________________________________________________
-
+    st.subheader("Goals")
     # Barplot number of goals by team
     team_goals = df_players.groupby('Team Initials')[
         'Goals'].sum().reset_index()
@@ -134,8 +134,137 @@ def run():
     fig.update_traces(hovertemplate='%{hovertext}')
     fig.update_layout(xaxis_tickangle=45)
     st.write(fig)
+
     # _______________________________________________________________________________________
 
+    # Top goalscorer by year
+    player_goals = df_players.groupby(['Player Name', 'Year', 'Team Initials'])[
+        'Goals'].sum().reset_index()
+
+    # Sort the data by year and goals in descending order
+    player_goals = player_goals.sort_values(
+        by=['Year', 'Goals'], ascending=[True, False])
+
+    # Select the top goalscorer for each year
+    top_scorers = player_goals.groupby('Year').first().reset_index()
+
+    max_year = top_scorers['Year'].max()
+
+    # Define the tick values at every 4-year interval
+    tick_values = list(range(1930, int(max_year)+1, 4))
+
+    # Create the scatter plot
+    fig = px.scatter(top_scorers, x='Year', y='Goals', color='Team Initials',
+                     title='Top Goalscorer by Year', labels={'Team Initials': 'Team'},
+                     custom_data=['Player Name'])
+
+    # Customize marker settings for better visibility
+    fig.update_traces(mode='markers', marker=dict(size=8, symbol='circle'),
+                      hovertemplate='Player: %{customdata[0]}<br>Goals: %{y}')
+
+    # Set the x-axis tick values and labels
+    fig.update_xaxes(tickmode='array', tickvals=tick_values,
+                     ticktext=[str(year) for year in tick_values])
+
+    fig.update_layout(xaxis_tickangle=45)
+    st.write(fig)
+
+    # _______________________________________________________________________________________
+
+    # goals by shirt number
+    goalscorers = df_players.groupby('Shirt Number')[
+        'Goals'].sum().reset_index()
+
+    # Sort the data in descending order based on the goals scored
+    goalscorers = goalscorers.sort_values('Goals', ascending=False)
+    goalscorers = goalscorers[goalscorers['Shirt Number'] != 0]
+
+    # Create the bar chart
+    fig = px.bar(goalscorers, y='Shirt Number', x='Goals',
+                 orientation='h', title='Top Goalscorers by Shirt Number')
+
+    # Set the axis labels
+    fig.update_xaxes(title='Goals')
+    fig.update_yaxes(title='Shirt Number')
+    fig.update_layout(height=600)
+
+    # Show all the shirt numbers on the y-axis
+    fig.update_layout(yaxis=dict(tickmode='linear', dtick=1))
+
+    # Show the graph
+    st.write(fig)
+
+    substitute_goals = df_players.loc[df_players['SubstituteIn'] > 0, 'Goals'].sum(
+    )
+    non_substitute_goals = df_players.loc[df_players['SubstituteIn'] == 0, 'Goals'].sum(
+    )
+
+    # Create the pie chart
+    fig = go.Figure(data=[go.Pie(labels=['Substitutes', 'Non-Substitutes'],
+                                 values=[substitute_goals,
+                                         non_substitute_goals],
+                                 hovertemplate='Goals: %{value}',
+                                 marker=dict(colors=['red', 'blue']))])
+
+    fig.update_traces(marker=dict(colors=['red']))
+    # Set the chart title
+    fig.update_layout(
+        title='Percentage of Goals Scored by Substitutes and Non-Substitutes')
+
+    st.write(fig)
+    # _______________________________________________________________________________________
+
+    # _______________________________________________________________________________________
+    st.subheader("Penalties")
+    # penalties
+    penalties_data = df_players.groupby('Team Initials').agg(
+        {'PenaltiesMissed': 'sum', 'Penalties': 'sum'}).reset_index()
+
+    # Filter out teams with no penalties
+    penalties_data = penalties_data[(penalties_data['PenaltiesMissed'] > 0) | (
+        penalties_data['Penalties'] > 0)]
+
+    # Calculate the total penalties for each team
+    penalties_data['Total Penalties'] = penalties_data['Penalties'] + \
+        penalties_data['PenaltiesMissed']
+
+    # Sort the data in descending order based on the total penalties
+    penalties_data = penalties_data.sort_values(
+        'Total Penalties', ascending=False)
+
+    # Create the bar chart
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=penalties_data['PenaltiesMissed'],
+        y=penalties_data['Team Initials'],
+        name='Missed Penalties',
+        orientation='h',
+        marker=dict(color='red')
+    ))
+    fig.add_trace(go.Bar(
+        x=penalties_data['Total Penalties'],
+        y=penalties_data['Team Initials'],
+        name='Total Penalties',
+        orientation='h',
+        marker=dict(color='blue')
+    ))
+
+    fig.update_layout(yaxis_autorange='reversed')
+
+    # Set the axis labels and title
+    fig.update_layout(
+        xaxis_title='Count',
+        yaxis_title='Team',
+        title='Penalties and Missed Penalties by Team'
+    )
+
+    # Adjust the height of the graph
+    fig.update_layout(height=1000)
+
+    st.write(fig)
+    # _______________________________________________________________________________________
+
+    st.subheader("Cards")
     # Treeplot for top 20 players with most cards
     player_cards = df_players.groupby('Player Name').agg(
         {'YellowCards': 'sum', 'RedCards': 'sum', 'Team Initials': 'first'}).reset_index()
@@ -250,39 +379,6 @@ def run():
     st.write(fig)
     # _______________________________________________________________________________________
 
-    # Top goalscorer by year
-    player_goals = df_players.groupby(['Player Name', 'Year', 'Team Initials'])[
-        'Goals'].sum().reset_index()
-
-    # Sort the data by year and goals in descending order
-    player_goals = player_goals.sort_values(
-        by=['Year', 'Goals'], ascending=[True, False])
-
-    # Select the top goalscorer for each year
-    top_scorers = player_goals.groupby('Year').first().reset_index()
-
-    max_year = top_scorers['Year'].max()
-
-    # Define the tick values at every 4-year interval
-    tick_values = list(range(1930, int(max_year)+1, 4))
-
-    # Create the scatter plot
-    fig = px.scatter(top_scorers, x='Year', y='Goals', color='Team Initials',
-                     title='Top Goalscorer by Year', labels={'Team Initials': 'Team'},
-                     custom_data=['Player Name'])
-
-    # Customize marker settings for better visibility
-    fig.update_traces(mode='markers', marker=dict(size=8, symbol='circle'),
-                      hovertemplate='Player: %{customdata[0]}<br>Goals: %{y}')
-
-    # Set the x-axis tick values and labels
-    fig.update_xaxes(tickmode='array', tickvals=tick_values,
-                     ticktext=[str(year) for year in tick_values])
-
-    fig.update_layout(xaxis_tickangle=45)
-    st.write(fig)
-    # _______________________________________________________________________________________
-
     # bubbleplot cards vs goals
     team_data = df_players.groupby('Team Initials').agg(
         {'Goals': 'sum', 'YellowCards': 'sum', 'RedCards': 'sum'}).reset_index()
@@ -307,93 +403,5 @@ def run():
 
     # Customize marker size
     fig.update_traces(marker=dict(sizemode='diameter', sizeref=2, sizemin=3))
-    st.write(fig)
-    # _______________________________________________________________________________________
-
-    # penalties
-    penalties_data = df_players.groupby('Team Initials').agg({'PenaltiesMissed': 'sum', 'Penalties': 'sum'}).reset_index()
-
-    # Filter out teams with no penalties
-    penalties_data = penalties_data[(penalties_data['PenaltiesMissed'] > 0) | (penalties_data['Penalties'] > 0)]
-
-    # Calculate the total penalties for each team
-    penalties_data['Total Penalties'] = penalties_data['Penalties'] + penalties_data['PenaltiesMissed']
-
-    # Sort the data in descending order based on the total penalties
-    penalties_data = penalties_data.sort_values('Total Penalties', ascending=False)
-
-    # Create the bar chart
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=penalties_data['PenaltiesMissed'],
-        y=penalties_data['Team Initials'],
-        name='Missed Penalties',
-        orientation='h',
-        marker=dict(color='red')
-    ))
-    fig.add_trace(go.Bar(
-        x=penalties_data['Total Penalties'],
-        y=penalties_data['Team Initials'],
-        name='Total Penalties',
-        orientation='h',
-        marker=dict(color='blue')
-    ))
-
-    fig.update_layout(yaxis_autorange='reversed')
-
-    # Set the axis labels and title
-    fig.update_layout(
-        xaxis_title='Count',
-        yaxis_title='Team',
-        title='Penalties and Missed Penalties by Team'
-    )
-
-    # Adjust the height of the graph
-    fig.update_layout(height=1000)
-
-
-    st.write(fig)
-    # _______________________________________________________________________________________
-
-    # goals by shirt number
-    goalscorers = df_players.groupby('Shirt Number')[
-        'Goals'].sum().reset_index()
-
-    # Sort the data in descending order based on the goals scored
-    goalscorers = goalscorers.sort_values('Goals', ascending=False)
-    goalscorers = goalscorers[goalscorers['Shirt Number'] != 0]
-
-    # Create the bar chart
-    fig = px.bar(goalscorers, y='Shirt Number', x='Goals',
-                 orientation='h', title='Top Goalscorers by Shirt Number')
-
-    # Set the axis labels
-    fig.update_xaxes(title='Goals')
-    fig.update_yaxes(title='Shirt Number')
-    fig.update_layout(height=800)
-
-    # Show all the shirt numbers on the y-axis
-    fig.update_layout(yaxis=dict(tickmode='linear', dtick=1))
-
-    # Show the graph
-    st.write(fig)
-
-    substitute_goals = df_players.loc[df_players['SubstituteIn'] > 0, 'Goals'].sum(
-    )
-    non_substitute_goals = df_players.loc[df_players['SubstituteIn'] == 0, 'Goals'].sum(
-    )
-
-    # Create the pie chart
-    fig = go.Figure(data=[go.Pie(labels=['Substitutes', 'Non-Substitutes'],
-                                 values=[substitute_goals,
-                                         non_substitute_goals],
-                                 hovertemplate='Goals: %{value}',
-                                 marker=dict(colors=['red', 'blue']))])
-
-    fig.update_traces(marker=dict(colors=['red']))
-    # Set the chart title
-    fig.update_layout(
-        title='Percentage of Goals Scored by Substitutes and Non-Substitutes')
-
     st.write(fig)
     # _______________________________________________________________________________________
