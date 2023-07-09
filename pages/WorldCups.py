@@ -65,7 +65,7 @@ def run():
     world_map = folium.Map(tiles='cartodbpositron')
 
     # Define color scheme
-    color_map = 'viridis'
+    color_map = 'Blues'
 
     # Create a function to update the map based on the selected placement
     def update_map(selected_placement):
