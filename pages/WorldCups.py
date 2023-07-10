@@ -65,7 +65,7 @@ def run():
     world_map = folium.Map(tiles='cartodbpositron')
 
     # Define color scheme
-    color_map = 'viridis'
+    color_map = 'Blues'
 
     # Create a function to update the map based on the selected placement
     def update_map(selected_placement):
@@ -204,6 +204,8 @@ def run():
                                     '#C4451C', '#DEA0FD', '#FE00FA', '#325A9B', '#FEAF16', 
                                     '#F8A19F', '#90AD1C', '#F6222E', '#1CFFCE', '#2ED9FF', 
                                     '#B10DA1', '#C075A6', '#FC1CBF', '#B00068', '#FBE426', '#16FF32'])
+    
+    fig.update_layout(height=600)
 
     st.plotly_chart(fig)
     
