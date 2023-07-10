@@ -38,7 +38,7 @@ def run():
     print(df_world_cups)
 
     # ---------------------- 1_WORLD MAP ----------------------
-    st.subheader("World Map")
+    st.subheader("World Cup Performance by Country")
     # Load the dataset
     df_worldmap_cup = pd.DataFrame({
         'Country': ['Brazil', 'Italy', 'Germany FR', 'Uruguay', 'Argentina', 'England', 'France', 'Spain', 'Germany', 'Netherlands',
@@ -100,6 +100,15 @@ def run():
     # Display the map in Streamlit
     st.components.v1.html(world_map._repr_html_(), height=500)
 
+    # description
+    st.markdown('''
+                Explore the Rich Legacy of Football World Cup: An interactive world map showcasing 
+                the historical success of national teams. Hover over countries to reveal their 
+                achievements in the prestigious tournament, including triumphs as winners, runners-up, 
+                third-place finishers, and fourth-place contenders. Discover the nations that have
+                made their mark on the global stage of football.
+                ''')
+
     # ---------------------- 2_NUMBER OF TIMES IN THE TOP 4 TEAMS ----------------------
     top_4 = ['Winner', 'Runners-Up', 'Third', 'Fourth']
     # merge "Germany FR" and "Germany" into "Germany"
@@ -123,7 +132,7 @@ def run():
     st.plotly_chart(fig)
 
     # ---------------------- 3_QUALIFIED TEAMS ----------------------
-    st.subheader("Qualified Teams by Year")
+    st.subheader("Number of Qualified Teams by Year")
     # Group by year and country to get the count of qualified teams
     values = df_world_cups.groupby('Year')['QualifiedTeams'].sum().values
 
@@ -163,6 +172,13 @@ def run():
 
     st.plotly_chart(fig)
 
+    st.markdown('''
+                The chart shows the distribution of qualified teams by year, with each rectangular section
+                representing a year from 1930 to 2014. The size of each section is proportional to the number 
+                of qualified teams in that year. \n
+                By hovering over each rectangle, you can see the number of qualified teams for that year.
+                ''')
+
     # ---------------------- 4_HISTORY TREND ----------------------
     st.subheader("History Trend")
     # ------------- GOALS SCORED PER YEAR -------------
@@ -189,15 +205,22 @@ def run():
                                     '#F8A19F', '#90AD1C', '#F6222E', '#1CFFCE', '#2ED9FF', 
                                     '#B10DA1', '#C075A6', '#FC1CBF', '#B00068', '#FBE426', '#16FF32'])
 
-    # print(px.colors.qualitative.Alphabet)
     st.plotly_chart(fig)
+    
+    st.markdown('''
+            This bar graph shows the trend in the number of goals scored per year from 1990 to 2014. 
+            The data indicates an overall increasing trend, with the highest number of goals scored in 2014 
+            and the lowest in 1990. \n
+            By hovering over each bar, you can see the exact number of goals scored for that year.
+            ''')
+
 
     # ------------- MATCHES PLAYED PER YEAR -------------
     # histogram of matches played per year
     fig = px.bar(
         x=df_world_cups["Year"], 
         y=df_world_cups["MatchesPlayed"],
-        color=df_world_cups["MatchesPlayed"],
+        # color=df_world_cups["MatchesPlayed"],
         title="Matches Played per Year",
         labels={'x': 'Year', 'y': 'Number of Matches'},
         orientation='v',
@@ -220,6 +243,12 @@ def run():
                                     '#565656', '#F8A19F', '#FC1CBF', '#B10DA1'])
     
     st.plotly_chart(fig)
+
+    st.markdown('''
+        This bar graph shows the number of matches played per year from 1930 to 2014. 
+        The data indicates an overall increasing trend, with the highest number of matches played in 2014 and the lowest in 1930. \n
+        By hovering over each bar, you can see the exact number of matches played for that year.
+        ''')        
 
     # ------------- GOALS SCORED BY MATCHES PLAYED IN EACH YEAR -------------
     # histogram of goals scored by matches played in each year
@@ -248,13 +277,32 @@ def run():
 
     st.plotly_chart(fig)
 
+    st.markdown('''
+            This bar graph shows the trend in the number of goals scored per match in each year 
+            from 1930 to 2014. The data indicates that there has been a slight decrease in 
+            the number of goals scored per match over time. While there have been some variations, 
+            the overall trend appears to be a gradual decline in the number of goals scored per match. \n
+            By hovering over each bar, you can see the number of goals scored per match for that year.
+                ''')
+
     # ---------------------- AVERAGE ATTENDANCE PER MATCH ----------------------
     df_world_cups['Attendance'] = df_world_cups['Attendance'].str.replace('.', '')
     df_world_cups['Attendance'] = pd.to_numeric(df_world_cups['Attendance'])
     df_world_cups['MatchesPlayed'] = pd.to_numeric(df_world_cups['MatchesPlayed'])
     df_world_cups['AvgAttendance'] = df_world_cups['Attendance'] / df_world_cups['MatchesPlayed']
-    fig = px.line(df_world_cups, x='Year', y='AvgAttendance', title='Average Attendance per Match in Each World Cup')
+    fig = px.line(df_world_cups, 
+                  x='Year', 
+                  y='AvgAttendance', 
+                  title='Average Attendance per Match in Each World Cup')
+    fig.update_xaxes(tickvals=df_world_cups['Year'], ticktext=df_world_cups['Year'])
     st.plotly_chart(fig)
+
+    st.markdown('''
+        This line graph shows the trend in the average attendance per match in each World Cup. 
+        The data indicates that there has been a general increase in average attendance over time,
+        with a peak at 1994. The line graph shows a clear upward trend. \n
+        By hovering over the line, you can see the exact average attendance for that year.
+        ''')
 
     # ---------------------- 5_HOSTING COUNTRIES ----------------------
     st.subheader("Hosting the World Cup")
@@ -297,8 +345,14 @@ def run():
     else:
         # Create the pie chart for continents
         fig = go.Figure(data=go.Pie(labels=continent_counts.index, values=continent_counts))
-        fig.update_layout(title_text='Hosting Continents by Continent')
+        fig.update_layout(title_text='Hosting Continents for the World Cup')
         st.plotly_chart(fig)
+
+    st.markdown('''
+        This pie chart shows the distribution of World Cup hosting countries and continents.\n
+        You can choose to show the hosting countries or the hosting continents by selecting
+        the corresponding option in the dropdown menu. 
+                ''')
 
     # BAR CHART
     # does the host country have an advantage?
@@ -327,7 +381,11 @@ def run():
     fig.update_yaxes(title='World Cup Won', tickformat='linear', dtick=1)
 
     st.plotly_chart(fig)
-    st.write("The host country has won the World Cup", len(df_host_wins), "times out of", len(df_world_cups), "tournaments.")
+
+    st.markdown('''
+        This bar graph shows the number of World Cup wins and losses for countries that have hosted the World Cup. 
+        The data indicates that the host country does have an advantage, as all the countries shown have more wins than losses. 
+        ''')
 
     # -------------------------- 5_STADIUM --------------------------
     
@@ -374,7 +432,11 @@ def run():
         height=600
     )
 
-    # Display the plotly chart
     st.plotly_chart(fig)
+
+    st.markdown('''
+        This bar graph shows the top 10 stadiums with the highest attendance. \n
+        By hovering over each bar, you can see the city where the stadium is located.
+        ''')
 
     

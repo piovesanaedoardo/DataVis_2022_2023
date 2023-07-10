@@ -148,7 +148,7 @@ def run():
     top_players = player_cards.head(20)
 
     # Assign a random color to each team
-    color_palette = plotly.colors.qualitative.Alphabet
+    color_palette = plotly.colors.qualitative.Plotly
 
     # Create the color mapping dictionary for teams and colors
     team_colors = {team: color_palette[i % len(color_palette)] for i, team in enumerate(
@@ -311,15 +311,16 @@ def run():
     # _______________________________________________________________________________________
 
     # penalties
-    penalties_data = df_players.groupby('Team Initials').agg(
-        {'PenaltiesMissed': 'sum', 'Penalties': 'sum'}).reset_index()
+    penalties_data = df_players.groupby('Team Initials').agg({'PenaltiesMissed': 'sum', 'Penalties': 'sum'}).reset_index()
 
     # Filter out teams with no penalties
-    penalties_data = penalties_data[(penalties_data['PenaltiesMissed'] > 0) | (
-        penalties_data['Penalties'] > 0)]
+    penalties_data = penalties_data[(penalties_data['PenaltiesMissed'] > 0) | (penalties_data['Penalties'] > 0)]
 
-    # Sort the data alphabetically by team initials
-    penalties_data.sort_values('Team Initials', inplace=True)
+    # Calculate the total penalties for each team
+    penalties_data['Total Penalties'] = penalties_data['Penalties'] + penalties_data['PenaltiesMissed']
+
+    # Sort the data in descending order based on the total penalties
+    penalties_data = penalties_data.sort_values('Total Penalties', ascending=False)
 
     # Create the bar chart
     fig = go.Figure()
@@ -331,9 +332,9 @@ def run():
         marker=dict(color='red')
     ))
     fig.add_trace(go.Bar(
-        x=penalties_data['Penalties'],
+        x=penalties_data['Total Penalties'],
         y=penalties_data['Team Initials'],
-        name='Penalties',
+        name='Total Penalties',
         orientation='h',
         marker=dict(color='blue')
     ))
@@ -349,6 +350,8 @@ def run():
 
     # Adjust the height of the graph
     fig.update_layout(height=1000)
+
+
     st.write(fig)
     # _______________________________________________________________________________________
 
