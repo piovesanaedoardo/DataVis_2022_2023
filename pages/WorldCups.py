@@ -11,6 +11,9 @@ import matplotlib.colors as colors
 import folium
 from branca.colormap import linear
 import os
+import branca.colormap as cm
+from branca.element import MacroElement
+from jinja2 import Template
 # interactive histogram
 import plotly.express as px
 import plotly.graph_objects as go
@@ -49,6 +52,12 @@ def run():
         'Third': [2.0, 1.0, 1.0, 0.0, 0.0, 0.0, 2.0, 0.0, 3.0, 1.0, 0.0, 0.0, 2.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         'Fourth': [2.0, 1.0, 1.0, 3.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 2.0, 1.0, 1.0, 1.0, 1.0]
     })
+
+    # Replace "Germany FR" with "Germany"
+    df_worldmap_cup['Country'] = df_worldmap_cup['Country'].replace('Germany FR', 'Germany')
+    # Group by "Country" and sum the values
+    df_worldmap_cup = df_worldmap_cup.groupby('Country').sum().reset_index()
+
     # Load world shapefile data
     world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
     # Set 'Country' column as the index
@@ -64,32 +73,76 @@ def run():
     # Create a folium map centered on the world
     world_map = folium.Map(tiles='cartodbpositron')
 
-    # Define color scheme
-    color_map = 'Blues'
+    # # Define the values and colors
+    # values = [0, 1, 2, 3, 4, 5]
+    # colors = ['#ffffff', '#CAF0F8', '#90E0EF', '#00B4D8', '#0077B6', '#03045E']
+
+    # # Create a dictionary to map values to colors
+    # value_color_map = dict(zip(values, colors))
+
+    # # Create a custom function to map values to colors
+    # def get_color(value):
+    #     return value_color_map.get(value, 'white')
+
+    # # Create a function to update the map based on the selected placement
+    # def update_map(selected_placement):
+    #     # Filter the merged dataframe based on the selected placement
+    #     filtered_data = merged[merged['Placement'] == selected_placement]  
+    #     # Create GeoJson layer for the filtered data
+    #     geojson = folium.GeoJson(
+    #         data=filtered_data,
+    #         style_function=lambda feature: {
+    #             'fillColor': get_color(feature['properties']['Count']),
+    #             'fillOpacity': 0.7,
+    #             'color': 'black',
+    #             'weight': 1,
+    #         }
+    #     )
+    #     # Add tooltips to the map
+    #     tooltip = folium.GeoJsonTooltip(fields=['name', 'Count'], aliases=['Country:', 'Count:'])
+    #     geojson.add_child(tooltip)
+    #     # Add the GeoJson layer to the map
+    #     geojson.add_to(world_map)
+
+    # # Get the available placement options
+    # placements = df_worldmap_cup['Placement'].unique()
+    # # Create a dropdown menu to select the placement
+    # selected_placement = st.selectbox('Select Placement:', placements)
+    # # Update the map based on the selected placement
+    # update_map(selected_placement)
+    # # Display the map in Streamlit
+    # st.components.v1.html(world_map._repr_html_(), height=500)
+
+    # Define the values and colors
+    values = [0, 1, 2, 3, 4, 5]
+    colors = ['#ffffff', '#CAF0F8', '#90E0EF', '#00B4D8', '#0077B6', '#03045E']
+
+    # Create a dictionary to map values to colors
+    value_color_map = dict(zip(values, colors))
+
+    # Create a custom function to map values to colors
+    def get_color(value):
+        return value_color_map.get(value, 'white')
 
     # Create a function to update the map based on the selected placement
     def update_map(selected_placement):
         # Filter the merged dataframe based on the selected placement
         filtered_data = merged[merged['Placement'] == selected_placement]  
-        # Create choropleth layer for the filtered data
-        choropleth = folium.Choropleth(
-            geo_data=filtered_data,
+        # Create GeoJson layer for the filtered data
+        geojson = folium.GeoJson(
             data=filtered_data,
-            columns=['iso_a3', 'Count'],
-            key_on='feature.properties.iso_a3',
-            fill_color=color_map,
-            fill_opacity=0.7,
-            line_opacity=0.2,
-            legend_name='World Cup Placements',
-            highlight=True,
-            nan_fill_color='white',
-            bins=range(int(filtered_data['Count'].max()) + 2)  # Set the legend bins to integer values from 0 to max+1
+            style_function=lambda feature: {
+                'fillColor': get_color(feature['properties']['Count']),
+                'fillOpacity': 0.7,
+                'color': 'black',
+                'weight': 1,
+            }
         )
         # Add tooltips to the map
         tooltip = folium.GeoJsonTooltip(fields=['name', 'Count'], aliases=['Country:', 'Count:'])
-        choropleth.geojson.add_child(tooltip)
-        # Add the choropleth layer to the map
-        choropleth.add_to(world_map)
+        geojson.add_child(tooltip)
+        # Add the GeoJson layer to the map
+        geojson.add_to(world_map)
 
     # Get the available placement options
     placements = df_worldmap_cup['Placement'].unique()
@@ -97,8 +150,31 @@ def run():
     selected_placement = st.selectbox('Select Placement:', placements)
     # Update the map based on the selected placement
     update_map(selected_placement)
+
+    # Create a template for the legend
+    template = """
+    {% macro html(this, kwargs) %}
+    <div style="position: fixed; bottom: 50px; left: 50px; z-index:9999; font-size:14px; background-color: white; padding: 10px; border-radius: 3px;">
+        <h5>Number of placements</h5>
+        {% for value, color in this.value_color_map.items() %}
+            <i style="background-color: {{color}}; width: 18px; height: 18px; float: left; margin-right: 8px;"></i> {{value}}<br>
+        {% endfor %}
+    </div>
+    {% endmacro %}
+    """
+
+    # Create a custom legend element using the template and value-color map
+    legend = MacroElement()
+    legend._template = Template(template)
+    legend.value_color_map = value_color_map
+
+    # Add the legend element to the map
+    world_map.get_root().add_child(legend)
+
     # Display the map in Streamlit
     st.components.v1.html(world_map._repr_html_(), height=500)
+
+
 
     # description
     st.markdown('''
