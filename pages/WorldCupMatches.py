@@ -353,7 +353,7 @@ def run():
     #
 
     st.markdown("Visual 3: Proportion of Wins and Losses to the Number of Matches for a Specific Team")
-    st.markdown("It is possible to select one team at time, each year or all year altogether, the staistics adapt")
+    st.markdown("It is possible to select one team at time, each year or all year altogether, the statistics adapt.")
 
     # Team selection filter
     team_select = st.selectbox('Select a team', team_stats['Team'].unique(), key="team_select_fig_2")
@@ -402,7 +402,7 @@ def run():
     ### --- VS4 - REFEREES --- ###
 
     st.markdown("### Visualizations - Referees")
-    st.markdown("It is possible to select one team at time, each year or all year altogether, the staistics adapt. You can either seect one nationality or a referee separately")
+    st.markdown("It is possible to select one team at time, each year or all year altogether, the statistics adapt. You can either select one nationality or a referee separately.")
     
     import plotly.graph_objects as go
 
