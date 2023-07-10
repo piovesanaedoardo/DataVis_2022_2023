@@ -265,9 +265,8 @@ def run():
     # _______________________________________________________________________________________
 
     st.subheader("Cards")
-    # Treeplot for top 20 players with most cards
     player_cards = df_players.groupby('Player Name').agg(
-        {'YellowCards': 'sum', 'RedCards': 'sum', 'Team Initials': 'first'}).reset_index()
+    {'YellowCards': 'sum', 'RedCards': 'sum', 'Team Initials': 'first'}).reset_index()
 
     # Sort the players by the total number of cards
     player_cards.sort_values(
@@ -276,8 +275,11 @@ def run():
     # Select the top 20 players
     top_players = player_cards.head(20)
 
+    # Calculate the total number of cards for each player
+    top_players['TotalCards'] = top_players['YellowCards'] + top_players['RedCards']
+
     # Assign a random color to each team
-    color_palette = plotly.colors.qualitative.Plotly
+    color_palette = plotly.colors.qualitative.Light24
 
     # Create the color mapping dictionary for teams and colors
     team_colors = {team: color_palette[i % len(color_palette)] for i, team in enumerate(
@@ -288,21 +290,30 @@ def run():
         labels=top_players['Team Initials'] +
         ' - ' + top_players['Player Name'],
         parents=[''] * len(top_players),
-        values=top_players['YellowCards'] + top_players['RedCards'],
+        values=top_players['YellowCards'] + 1.5 * top_players['RedCards'],
         customdata=top_players[['YellowCards', 'RedCards']],
-        hovertemplate='<b>Player:</b> %{label}<br>'
-        'Yellow Cards: %{customdata[0]}<br>'
-        'Red Cards: %{customdata[1]}',
-        marker=dict(colors=[team_colors[team]
-                    for team in top_players['Team Initials']])
+        hovertemplate='Player: %{label}<br>'
+                  'Yellow Cards: %{customdata[0]}<br>'
+                  'Red Cards: %{customdata[1]}',
+        marker=dict(
+            colors=[team_colors[team] for team in top_players['Team Initials']]),
+        level=[2] * len(top_players)
     ))
 
     # Set the layout and title
     fig.update_layout(
         title='Top 20 Players with the Most Yellow and Red Cards',
     )
+    fig.update_layout(height=500)
 
     st.write(fig)
+
+
+
+
+
+
+
     # _______________________________________________________________________________________
 
     # Scatterplot of goals vs cards
